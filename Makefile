@@ -64,20 +64,22 @@ SRCS_COMMON-$(FFMPEG)                += av_opts.c                   \
                                         libmpcodecs/ad_ffmpeg.c     \
                                         libmpcodecs/vd_ffmpeg.c     \
                                         libmpcodecs/vf_geq.c        \
-                                        libmpcodecs/vf_lavc.c       \
+      $(if $(CONFIG_MPEG1VIDEO_ENCODER),libmpcodecs/vf_lavc.c,)     \
                                         libmpcodecs/vf_lavcdeint.c  \
                                         libmpcodecs/vf_pp.c         \
-                                        libmpcodecs/vf_screenshot.c \
+	     $(if $(CONFIG_PNG_ENCODER),libmpcodecs/vf_screenshot.c,) \
                                         libmpdemux/demux_lavf.c     \
                                         stream/stream_ffmpeg.c      \
                                         sub/av_sub.c                \
 
 # These filters use private headers and do not work with shared FFmpeg.
-SRCS_COMMON-$(FFMPEG_A)              += libaf/af_lavcac3enc.c    \
+SRCS_COMMON-$(FFMPEG_A)              += \
+	$(if $(or $(CONFIG_AC3_ENCODER),$(CONFIG_AC3_DECODER),   \
+		  $(CONFIG_AC3_PARSER)),libaf/af_lavcac3enc.c,)  \
                                         libmpcodecs/vf_fspp.c    \
-                                        libmpcodecs/vf_mcdeint.c \
+	    $(if $(CONFIG_SNOW_ENCODER),libmpcodecs/vf_mcdeint.c \
+					libmpcodecs/vf_spp.c,)   \
                                         libmpcodecs/vf_qp.c      \
-                                        libmpcodecs/vf_spp.c     \
                                         libmpcodecs/vf_uspp.c    \
 
 SRCS_COMMON-$(FREETYPE)              += sub/font_load_ft.c
@@ -506,7 +508,7 @@ SRCS_MPLAYER-$(DIRECT3D)     += libvo/vo_direct3d.c libvo/w32_common.c
 SRCS_MPLAYER-$(DIRECTFB)     += libvo/vo_directfb2.c libvo/vo_dfbmga.c
 SRCS_MPLAYER-$(DIRECTX)      += libao2/ao_dsound.c libvo/vo_directx.c
 SRCS_MPLAYER-$(DXR2)         += libao2/ao_dxr2.c libvo/vo_dxr2.c
-SRCS_MPLAYER-$(DXR3)         += libvo/vo_dxr3.c
+SRCS_MPLAYER-$(DXR3)         += libvo/vo_dxr3.c libvo/spuenc.c 	# mhfan
 SRCS_MPLAYER-$(ESD)          += libao2/ao_esd.c
 SRCS_MPLAYER-$(FBDEV)        += libvo/vo_fbdev.c libvo/vo_fbdev2.c
 SRCS_MPLAYER-$(FFMPEG)       += libvo/vo_png.c

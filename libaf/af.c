@@ -72,7 +72,9 @@ static const af_info_t * const filter_list[] = {
    &af_info_volnorm,
    &af_info_extrastereo,
 #ifdef CONFIG_FFMPEG_A
+#if (CONFIG_AC3_ENCODER) || (CONFIG_AC3_DECODER) || (CONFIG_AC3_PARSER)
    &af_info_lavcac3enc,
+#endif	/* comment by mhfan */
 #endif
 #ifdef CONFIG_FFMPEG
    &af_info_lavcresample,

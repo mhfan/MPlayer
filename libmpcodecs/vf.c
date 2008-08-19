@@ -141,10 +141,14 @@ static const vf_info_t* const filter_list[]={
     &vf_info_pp7,
 #ifdef CONFIG_FFMPEG
     &vf_info_pp,
+#if CONFIG_MPEG1VIDEO_ENCODER
     &vf_info_lavc,
+#endif
     &vf_info_lavcdeint,
+#if CONFIG_PNG_ENCODER
     &vf_info_screenshot,
     &vf_info_geq,
+#endif
 #endif
 #ifdef CONFIG_ZR
     &vf_info_zrmjpeg,
@@ -190,7 +194,10 @@ static const vf_info_t* const filter_list[]={
     &vf_info_remove_logo,
     &vf_info_hue,
 #ifdef CONFIG_FFMPEG_A
+#if CONFIG_SNOW_ENCODER
     &vf_info_spp,
+    &vf_info_mcdeint,
+#endif
     &vf_info_uspp,
     &vf_info_fspp,
     &vf_info_qp,
