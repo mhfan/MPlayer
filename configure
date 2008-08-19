@@ -444,6 +444,8 @@ Codecs:
   --enable-demuxer=DEMUXER  enable specified FFmpeg demuxer
   --disable-muxer=MUXER     disable specified FFmpeg muxer
   --enable-muxer=MUXER      enable specified FFmpeg muxer
+  --disable-bsf=BSF         disable specified FFmpeg bsf
+  --enable-bsf=BSF          enable specified FFmpeg bsf
 
 Video output:
   --disable-vidix          disable VIDIX [for x86 *nix]
@@ -1245,18 +1247,41 @@ for ac_option do
   --disable-libopencore_amrnb)  _libopencore_amrnb=no   ;;
   --enable-libopencore_amrwb)   _libopencore_amrwb=yes  ;;
   --disable-libopencore_amrwb)  _libopencore_amrwb=no   ;;
-  --enable-decoder=*)  libavdecoders="$libavdecoders $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-decoder=*) libavdecoders=$(echo $libavdecoders | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
-  --enable-encoder=*)  libavencoders="$libavencoders $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-encoder=*) libavencoders=$(echo $libavencoders | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
-  --enable-parser=*)   libavparsers="$libavparsers $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-parser=*)  libavparsers=$(echo $libavparsers | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
-  --enable-protocol=*)   libavprotocols="$libavprotocols $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-protocol=*)  libavprotocols=$(echo $libavprotocols | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
-  --enable-demuxer=*)  libavdemuxers="$libavdemuxers $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-demuxer=*) libavdemuxers=$(echo $libavdemuxers | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
-  --enable-muxer=*)    libavmuxers="$libavmuxers $(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')" ;;
-  --disable-muxer=*)    libavmuxers=$(echo $libavmuxers | sed "s/$(echo $ac_option | cut -d '=' -f 2 | tr '[a-z]' '[A-Z]')//g") ;;
+
+  --*able-bsf=*|--*able-protocol=*|--*able-muxer=*|--*able-demuxer=*|--*able-parser=*|--*able-decoder=*|--*able-encoder=*)
+    ac_opt_val=$(echo $ac_option | cut -d '=' -f 2)
+    thing=$(echo $ac_option | cut -d '=' -f 1 | cut -d '-' -f 4)
+    action=$(echo $ac_option | cut -d '=' -f 1 | cut -d '-' -f 3)
+    if test $action = "enable"; then
+        if test "$ac_opt_val" = "none"; then eval libav${thing}s=; else
+#           tmp=$(echo $ac_opt_val | sed "s/\(\w\+\)/\1_${thing}/g" | tr [a-z] [A-Z])
+#           eval libav${thing}s="\$libav${thing}s\ \$tmp"
+
+            eval tmp=\$libav${thing}s
+            eval all=\$libav${thing}s_all
+            for val in $ac_opt_val; do
+                val=$(echo ${val}_${thing} | tr [a-z] [A-Z])
+                if echo $all | grep -qs $val; then
+                    if echo $tmp | grep -qs $val; then
+                        echo "Warning: $val duplicated!"
+                    else tmp="$tmp $val"; fi
+                else echo "Warning: no $val!"; fi
+            done; eval libav${thing}s=\$tmp
+        fi
+    else
+        if test "$ac_opt_val" = "all"; then eval libav${thing}s=; else
+            eval tmp=\$libav${thing}s
+            eval all=\$libav${thing}s_all
+            for val in $ac_opt_val; do
+                val=$(echo ${val}_${thing} | tr [a-z] [A-Z])
+                if echo $all | grep -qs $val; then
+                    tmp=$(echo $tmp | sed "s/$val//g")
+                else echo "Warning: no $val"; fi
+            done; eval libav${thing}s=\$tmp
+        fi
+    fi
+  ;;    # XXX: mhfan
+
   --enable-ffmpeg_a)    ffmpeg_a=yes    ;;
   --disable-ffmpeg_a)   ffmpeg_a=no     ;;
   --enable-ffmpeg_so)   ffmpeg_so=yes   ;;
@@ -3347,14 +3372,12 @@ test $_winsock2_h = no && test $inet_pton = no &&
 if test "$networking" = yes ; then
   def_network='#define CONFIG_NETWORK 1'
   def_networking='#define CONFIG_NETWORKING 1'
-  def_rtpdec='#define CONFIG_RTPDEC 1'
   extra_ldflags="$extra_ldflags $_ld_sock"
   inputmodules="networking $inputmodules"
 else
   noinputmodules="networking $noinputmodules"
   def_network='#define CONFIG_NETWORK 0'
   def_networking='#undef CONFIG_NETWORKING'
-  def_rtpdec='#define CONFIG_RTPDEC 0'
   libavprotocols=$(echo $libavprotocols | sed -e s/GOPHER_PROTOCOL// -e s/HTTP_PROTOCOL// -e s/RTMP_PROTOCOL// -e s/RTP_PROTOCOL// -e s/TCP_PROTOCOL// -e s/UDP_PROTOCOL// -e s/MMSH_PROTOCOL// -e s/MMST_PROTOCOL//)
   libavdemuxers=$(echo $libavdemuxers | sed -e s/RTSP_DEMUXER// -e s/SDP_DEMUXER// -e s/RTP_DEMUXER//)
 fi
@@ -6859,9 +6882,9 @@ echocheck "FFmpeg"
 test -d ffmpeg/libavutil ||
   die "MPlayer will not compile without libavutil in the source tree."
 ffmpeg=no
-if test "$ffmpeg_a" = auto ; then
+if test "$ffmpeg_a" != no ; then
   test -d ffmpeg/libavutil && ffmpeg_a=yes && ffmpeg=yes && extra_cflags="$extra_cflags -DFF_API_MAX_STREAMS=0"
-elif test "$ffmpeg_so" = auto ; then
+elif test "$ffmpeg_so" != no ; then
   ffmpeg_so=no
   if $_pkg_config --exists libavutil ; then
     inc_ffmpeg=$($_pkg_config --cflags libpostproc libswscale libavformat libavcodec libavutil)
@@ -7214,13 +7237,11 @@ echores "$_mp3lame"
 fi # test "$_mencoder" != no
 
 echocheck "mencoder"
-if test "$_mencoder" = yes ; then
-  def_muxers='#define CONFIG_MUXERS 1'
-else
+if test "$_mencoder" = yes ; then true; else
+  # XXX: let user specify these encoders, by mhfan
   # mpeg1video for vf_lavc, snow for vf_uspp / vf_mcdeint,
-  libavencoders="$mplayer_encoders MPEG1VIDEO_ENCODER SNOW_ENCODER"
-  libavmuxers=""
-  def_muxers='#define CONFIG_MUXERS 0'
+  #libavencoders="$mplayer_encoders"
+  test libavmuxers = ""
 fi
 echores "$_mencoder"
 
@@ -8154,14 +8175,17 @@ SLIBNAME            = \$(SLIBPREF)\$(FULLNAME)\$(SLIBSUF)
 SLIBNAME_WITH_MAJOR = \$(SLIBNAME)
 
 # Some FFmpeg codecs depend on these. Enable them unconditionally for now.
-CONFIG_AANDCT  = yes
+CONFIG_AANDCT  = $(if echo $libavdecoders $libavencoders | \
+	grep -q "\(SNOW\|SVQ1\)"; then echo yes; else echo no; fi)
 CONFIG_DCT     = yes
-CONFIG_DWT     = yes
+CONFIG_DWT     = $(if echo $libavdecoders $libavencoders | \
+	grep -q "SNOW"; then echo yes; else echo no; fi)
 CONFIG_FFT     = yes
 CONFIG_GOLOMB  = yes
 CONFIG_H264DSP = yes
 CONFIG_H264PRED= yes
-CONFIG_HUFFMAN = yes
+CONFIG_HUFFMAN = $(if echo $libavdecoders $libavencoders | \
+	grep -q "\(FRAPS\|VP6\)"; then echo yes; else echo no; fi)
 CONFIG_LPC     = yes
 CONFIG_LSP     = yes
 CONFIG_MDCT    = yes
@@ -8177,11 +8201,13 @@ CONFIG_LIBRTMP  = $_librtmp
 CONFIG_AC3DSP   = yes
 CONFIG_BZLIB    = $bzlib
 CONFIG_CRYSTALHD= $crystalhd
-CONFIG_ENCODERS = yes
+CONFIG_ENCODERS = $(if test "$libavencoders"; then echo yes; else echo no; fi)
 CONFIG_GPL      = yes
 CONFIG_MLIB     = $_mlib
-CONFIG_MUXERS   = $_mencoder
-CONFIG_RTPDEC   = $networking
+CONFIG_MUXERS   = $(if test "$libavmuxers"; then echo yes; else echo no; fi)
+CONFIG_RTPDEC   = $(if test "$networking" = "yes" && \
+	echo $libavdemuxers $libavmuxers | grep -q "\(SDP\|HTTP\)"; \
+	then echo yes; else echo no; fi)
 CONFIG_VDPAU    = $_vdpau
 CONFIG_XVMC     = $_xvmc
 CONFIG_ZLIB     = $_zlib
@@ -8192,14 +8218,14 @@ HAVE_SHM        = $_shm
 HAVE_W32THREADS = $_w32threads
 HAVE_YASM       = $have_yasm
 
-$(echo $libavdecoders  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavencoders  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavparsers   | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavdemuxers  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavmuxers    | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavprotocols | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavbsfs      | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
-$(echo $libavhwaccels  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavdecoders"  && echo $libavdecoders  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavencoders"  && echo $libavencoders  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavparsers"   && echo $libavparsers   | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavdemuxers"  && echo $libavdemuxers  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavmuxers"    && echo $libavmuxers    | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavprotocols" && echo $libavprotocols | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavbsfs"      && echo $libavbsfs      | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
+$(test "$libavhwaccels"  && echo $libavhwaccels  | tr '[a-z] ' '[A-Z]\n' | sed 's/^/CONFIG_/;s/$/=yes/')
 EOF
 
 #############################################################################
@@ -8594,10 +8620,13 @@ $def_ffmpeg_a
 $def_ffmpeg_so
 
 #define CONFIG_DECODERS 1
-#define CONFIG_ENCODERS 1
+#define CONFIG_ENCODERS $(if test "$libavencoders"; \
+	then echo 1; else echo 0; fi)
 #define CONFIG_DEMUXERS 1
-$def_muxers
-$def_rtpdec
+#define CONFIG_MUXERS $(if test "$libavmuxers"; then echo 1; else echo 0; fi)
+#define CONFIG_RTPDEC $(if test "$networking" = "yes" && \
+	echo $libavdemuxers $libavmuxers | grep -q "\(SDP\|HTTP\)"; \
+	then echo 1; else echo 0; fi)
 
 $def_arpa_inet_h
 $def_bswap
@@ -8643,7 +8672,7 @@ $def_yasm
 #define CONFIG_LIBVORBIS 0
 #define CONFIG_POWERPC_PERF 0
 #define CONFIG_SHARED 0
-#define CONFIG_SMALL 0
+#define CONFIG_SMALL 1	// XXX:
 #define CONFIG_SWSCALE_ALPHA 1
 
 #define HAVE_ALIGNED_STACK 1
@@ -8664,14 +8693,17 @@ $def_yasm
 #define HAVE_VIRTUALALLOC 0
 
 /* Some FFmpeg codecs depend on these. Enable them unconditionally for now. */
-#define CONFIG_AANDCT 1
+#define CONFIG_AANDCT $(if echo $libavdecoders $libavencoders | \
+	grep -q "\(SNOW\|SVQ1\)"; then echo 1; else echo 0; fi)
 #define CONFIG_DCT 1
-#define CONFIG_DWT 1
+#define CONFIG_DWT $(if echo $libavdecoders $libavencoders | \
+	grep -q "SNOW"; then echo 1; else echo 0; fi)
 #define CONFIG_FFT 1
 #define CONFIG_GOLOMB 1
 #define CONFIG_H264DSP 1
 #define CONFIG_H264PRED 1
-#define CONFIG_HUFFMAN 1
+#define CONFIG_HUFFMAN $(if echo $libavdecoders $libavencoders | \
+	grep -q "\(FRAPS\|VP6\)"; then echo 1; else echo 0; fi)
 #define CONFIG_LPC 1
 #define CONFIG_MDCT 1
 #define CONFIG_RDFT 1
