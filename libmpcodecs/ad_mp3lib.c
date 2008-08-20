@@ -68,6 +68,7 @@ static int init(sh_audio_t *sh)
   sh->channels=2; // hack
   sh->samplesize=2;
   sh->samplerate=MP3_samplerate;
+  if (sh->i_bps < 8)	// XXX: mhfan
   sh->i_bps=MP3_bitrate*(1000/8);
   MP3_PrintHeader();
   return 1;

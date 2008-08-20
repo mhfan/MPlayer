@@ -98,25 +98,29 @@ static int parse_flag(const m_option_t* opt,const char *name, const char *param,
     if(!param) return M_OPT_MISSING_PARAM;
     if (!strcasecmp(param, "yes") ||	/* any other language? */
 	!strcasecmp(param, "on") ||
+	!strcasecmp(param, "y") ||
+#if 0 	/* comment by mhfan */
 	!strcasecmp(param, "ja") ||
 	!strcasecmp(param, "si") ||
 	!strcasecmp(param, "igen") ||
-	!strcasecmp(param, "y") ||
 	!strcasecmp(param, "j") ||
 	!strcasecmp(param, "i") ||
 	!strcasecmp(param, "tak") ||
 	!strcasecmp(param, "ja") ||
+#endif	/* comment by mhfan */
 	!strcasecmp(param, "true") ||
 	!strcmp(param, "1")) {
       if(dst) VAL(dst) = opt->max;
     } else if (!strcasecmp(param, "no") ||
 	       !strcasecmp(param, "off") ||
+	       !strcasecmp(param, "n") ||
+#if 0 	/* comment by mhfan */
 	       !strcasecmp(param, "nein") ||
 	       !strcasecmp(param, "nicht") ||
 	       !strcasecmp(param, "nem") ||
-	       !strcasecmp(param, "n") ||
 	       !strcasecmp(param, "nie") ||
 	       !strcasecmp(param, "nej") ||
+#endif	/* comment by mhfan */
 	       !strcasecmp(param, "false") ||
 	       !strcmp(param, "0")) {
       if(dst) VAL(dst) = opt->min;

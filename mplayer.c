@@ -334,7 +334,7 @@ FILE *edl_fd;                   ///< fd to write to when in -edlout mode.
 // enter the same scene again and skip forward immediately
 float edl_backward_delay = 2;
 int edl_start_pts;              ///< Automatically add/sub this from EDL start/stop pos
-int use_filedir_conf;
+int use_filedir_conf = 1;	// XXX: mhfan
 int use_filename_title;
 
 static unsigned int initialized_flags;
@@ -758,6 +758,7 @@ void exit_player_with_rc(enum exit_reason how, int rc)
     case EXIT_QUIT:
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_ExitingHow, MSGTR_Exit_quit);
         mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_EXIT=QUIT\n");
+	//if (!rc) rc = 1;	// XXX: mhfan
         break;
     case EXIT_EOF:
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_ExitingHow, MSGTR_Exit_eof);
@@ -2797,6 +2798,13 @@ int main(int argc, char *argv[])
 
     int gui_no_filename = 0;
 
+#if 0 	/* comment by mhfan */
+    setvbuf(stdin,  NULL, _IOLBF, 0);
+    setvbuf(stdout, NULL, _IOLBF, 0);
+    if (!setenv("TZ", "cst-8", 0)) tzset();
+    setlocale(LC_CTYPE, "");
+#endif	/* comment by mhfan */
+
     common_preinit();
 
     // Create the config context and register the options
@@ -3643,8 +3651,14 @@ goto_enable_cache:
 
     if (playing_msg) {
         char *msg = property_expand_string(mpctx, playing_msg);
+
+	if (msg[0] == 0x7f) {	// XXX:
+	    int dur = demuxer_get_time_length(mpctx->demuxer);
+	    set_osd_msg(OSD_MSG_TEXT, 1, (dur + 1) * 1000, msg + 1);
+	} else
+
 	set_osd_msg(OSD_MSG_TEXT, 1, osd_duration, msg);
-        mp_msg(MSGT_CPLAYER, MSGL_INFO, "%s\n", msg);
+	mp_msg(MSGT_CPLAYER, MSGL_V, "%s\n", msg);
         free(msg);
     }
 
@@ -3861,7 +3875,7 @@ goto_enable_cache:
                 if (heartbeat_cmd) {
                     static unsigned last_heartbeat;
                     unsigned now = GetTimerMS();
-                    if (now - last_heartbeat > 30000) {
+                    if (now - last_heartbeat > 4000) {
                         last_heartbeat = now;
                         system(heartbeat_cmd);
                     }

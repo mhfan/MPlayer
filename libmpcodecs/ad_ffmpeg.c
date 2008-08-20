@@ -160,6 +160,7 @@ static int init(sh_audio_t *sh_audio)
    } while (x <= 0 && tries++ < 5);
    if(x>0) sh_audio->a_buffer_len=x;
 
+  if (sh_audio->i_bps < 8)	// XXX: mhfan
   sh_audio->i_bps=lavc_context->bit_rate/8;
   if (sh_audio->wf && sh_audio->wf->nAvgBytesPerSec)
       sh_audio->i_bps=sh_audio->wf->nAvgBytesPerSec;

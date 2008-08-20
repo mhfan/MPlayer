@@ -36,12 +36,12 @@
 
 #include "codec-cfg.h"
 
-#include "libvo/sub.h"
 #include "libvo/video_out.h"
 
 #include "libmpdemux/stheader.h"
 #include "vd.h"
 #include "vf.h"
+#include "sub/sub.h"
 #include "sub/eosd.h"
 
 #include "dec_video.h"

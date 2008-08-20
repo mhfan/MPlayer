@@ -117,6 +117,7 @@ static int init(sh_audio_t *sh_audio)
   sh_audio->channels=sh_audio->wf->nChannels;
   sh_audio->samplerate=sh_audio->wf->nSamplesPerSec;
   /* decodes 34 byte -> 64 short*/
+  if ((sh_audio->i_bps = sh_audio->wf->nAvgBytesPerSec) < 8)	// XXX: mhfan
   sh_audio->i_bps =
     (sh_audio->ds->ss_mul * sh_audio->samplerate) / sh_audio->ds->ss_div;
   sh_audio->samplesize=2;

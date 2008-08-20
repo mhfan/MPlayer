@@ -52,7 +52,7 @@
 #endif
 
 #ifdef CONFIG_LIRCC
-#include <lirc/lircc.h>
+#include <lirc/lirc_client.h>
 #endif
 
 #include "ar.h"

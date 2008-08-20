@@ -716,10 +716,12 @@ DIRS =  . \
         ffmpeg/libavcodec/alpha \
         ffmpeg/libavcodec/arm \
         ffmpeg/libavcodec/bfin \
+        ffmpeg/libavcodec/mfc \
         ffmpeg/libavcodec/mlib \
         ffmpeg/libavcodec/ppc \
         ffmpeg/libavcodec/sh4 \
         ffmpeg/libavcodec/sparc \
+        ffmpeg/libavcodec/wmadeci \
         ffmpeg/libavcodec/x86 \
         ffmpeg/libavformat \
         ffmpeg/libavutil \

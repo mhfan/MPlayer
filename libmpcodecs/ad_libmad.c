@@ -89,7 +89,7 @@ while((len=demux_read_data(sh->ds,&sh->a_in_buffer[sh->a_in_buffer_len],
     if(this->stream.error==MAD_ERROR_BUFLEN) break;
   }
 }
-mp_msg(MSGT_DECAUDIO,MSGL_INFO,"Cannot sync MAD frame\n");
+mp_msg(MSGT_DECAUDIO,MSGL_V,"Cannot sync MAD frame\n");
 return 0;
 }
 
@@ -101,6 +101,7 @@ static int init(sh_audio_t *sh){
 
   sh->channels=(this->frame.header.mode == MAD_MODE_SINGLE_CHANNEL) ? 1 : 2;
   sh->samplerate=this->frame.header.samplerate;
+  if (sh->i_bps < 8)	// XXX: mhfan
   sh->i_bps=this->frame.header.bitrate/8;
   sh->samplesize=2;
 
@@ -175,6 +176,9 @@ static int control(sh_audio_t *sh,int cmd,void* arg, ...){
     switch(cmd){
       case ADCTRL_RESYNC_STREAM:
 	this->have_frame=0;
+	mad_synth_finish (&this->synth);
+	mad_frame_finish (&this->frame);
+	mad_stream_finish(&this->stream);	// XXX: by mhfan
 	mad_synth_init  (&this->synth);
 	mad_stream_init (&this->stream);
 	mad_frame_init  (&this->frame);

@@ -172,6 +172,7 @@ static int control(sh_video_t *sh, int cmd, void *arg, ...){
         return CONTROL_FALSE;
     }
     case VDCTRL_RESYNC_STREAM:
+	//avcodec_initialized |= 0x02;
         avcodec_flush_buffers(avctx);
         return CONTROL_TRUE;
     case VDCTRL_QUERY_UNSEEN_FRAMES:
@@ -853,7 +854,6 @@ static mp_image_t *decode(sh_video_t *sh, void *data, int len, int flags){
     pkt.flags = AV_PKT_FLAG_KEY;
     ret = avcodec_decode_video2(avctx, pic, &got_picture, &pkt);
 
-    dr1= ctx->do_dr1;
     if(ret<0) mp_msg(MSGT_DECVIDEO, MSGL_WARN, "Error while decoding frame!\n");
 //printf("repeat: %d\n", pic->repeat_pict);
 //-- vstats generation
@@ -936,6 +936,11 @@ static mp_image_t *decode(sh_video_t *sh, void *data, int len, int flags){
 	    return &mpi_no_picture; // H.264 first field only
 	else
 	    return NULL;    // skipped image
+    }
+
+    else if (0 && (avcodec_initialized & 0x02)) {
+	    if (avctx->coded_frame->pict_type == FF_I_TYPE)
+		avcodec_initialized &= ~0x02; else return NULL;	// XXX:
     }
 
     if(init_vo(sh, avctx->pix_fmt) < 0) return NULL;

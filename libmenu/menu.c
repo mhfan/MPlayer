@@ -345,8 +345,13 @@ void menu_draw(menu_t* menu,mp_image_t* mpi) {
 }
 
 void menu_update_mouse_pos(double x, double y) {
+#if 0
   menu_mouse_x = x;
   menu_mouse_y = y;
+#else// FIXME: rotate 90 degree clockwise, by mhfan
+    menu_mouse_x = y;
+    menu_mouse_y = 1.f - x;
+#endif
   menu_mouse_pos_updated = 1;
 }
 

@@ -135,7 +135,7 @@ char* m_properties_expand_string(const m_option_t* prop_list,char* str, void *ct
                     char num[3] = { str[2], str[3], 0 };
                     char* end = num;
                     num_val = strtol(num,&end,16);
-                    sl = end-num;
+                    sl += end-num;
                     l = 1;
                     p = &num_val;
                 } else

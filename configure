@@ -1454,8 +1454,7 @@ for ac_option do
         _3dnow=no _3dnowext=no _mmx=no _mmxext=no ;;
 
   *)
-    echo "Unknown parameter: $ac_option"
-    exit 1
+    echo "Unknown parameter: $ac_option"; #exit 1
     ;;
 
   esac
@@ -1552,6 +1551,7 @@ else # if test -z "$_target"
     morphos) system_name=MorphOS ;;
     amigaos) system_name=AmigaOS ;;
     mingw32*) system_name=MINGW32 ;;
+    *) if echo $_target | grep -qs linux; then system_name=Linux; fi ;;
   esac
   # We need to convert underscores so that values like k6-2 and pentium-mmx can be passed
   host_arch=$(echo $_target | cut -d '-' -f 1)
@@ -3627,6 +3627,7 @@ fi
 echores "$_pthreads"
 
 if cygwin ; then
+  CFLAGS="$CFLAGS -D__CYGWIN__"	# XXX: for 64bit file access, by mhfan
   if test "$_pthreads" = yes ; then
     def_pthread_cache="#define PTHREAD_CACHE 1"
   else
@@ -6942,6 +6943,7 @@ else
   def_ffmpeg_so='#undef CONFIG_FFMPEG_SO'
   nocodecmodules="ffmpeg $nocodecmodules"
 fi
+def_libavcodec_mpegaudio_hp='#define CONFIG_MPEGAUDIO_HP 0'
 test "$_libavcodec_mpegaudio_hp" = yes &&
   def_libavcodec_mpegaudio_hp='#define CONFIG_MPEGAUDIO_HP 1' &&
   mak_libavcodec_mpegaudio_hp='CONFIG_MPEGAUDIO_HP = yes'
@@ -8211,6 +8213,8 @@ YASMFLAGS  = $YASMFLAGS
 
 CONFIG_STATIC = yes
 SRC_PATH      = .
+#SRC_PATH_BARE = $SRC_PATH
+#BUILD_ROOT    = ..
 LIBPREF       = lib
 LIBSUF        = .a
 FULLNAME      = \$(NAME)\$(BUILDSUF)

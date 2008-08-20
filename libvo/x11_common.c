@@ -1444,7 +1444,7 @@ void xscreensaver_heartbeat(void)
 {
     unsigned int time = GetTimerMS();
 
-    if (mDisplay && screensaver_off && (time - time_last) > 30000)
+    if (mDisplay && screensaver_off && (time - time_last) > 4000)
     {
         time_last = time;
 
