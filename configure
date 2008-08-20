@@ -347,6 +347,7 @@ Optional features:
   --enable-live          enable LIVE555 Streaming Media [autodetect]
   --enable-nemesi        enable Nemesi Streaming Media [autodetect]
   --enable-librtmp       enable RTMPDump Streaming Media [autodetect]
+  --disable-dl           disable dynamic loader [autodetect]
   --disable-vcd          disable VCD support [autodetect]
   --disable-bluray       disable Blu-ray support [autodetect]
   --disable-dvdnav       disable libdvdnav [autodetect]
@@ -730,6 +731,7 @@ _bluray=auto
 _dvdnav=auto
 _dvdnavconfig=dvdnav-config
 _dvdreadconfig=dvdread-config
+_dl=auto
 _dvdread=auto
 _dvdread_internal=auto
 _libdvdcss_internal=auto
@@ -1139,6 +1141,8 @@ for ac_option do
   --disable-vcd)        _vcd=no         ;;
   --enable-bluray)      _bluray=yes     ;;
   --disable-bluray)     _bluray=no      ;;
+  --enable-dl)          _dl=yes         ;;
+  --disable-dl)         _dl=no          ;;      # XXX: mhfan
   --enable-dvdread)     _dvdread=yes    ;;
   --disable-dvdread)    _dvdread=no     ;;
   --enable-dvdread-internal)    _dvdread_internal=yes   ;;
@@ -3530,10 +3534,12 @@ else
 fi
 
 echocheck "dynamic loader"
+if test "$_dl" != no; then	# XXX: mhfan
 _dl=no
 for _ld_tmp in "" -ldl; do
   statement_check dlfcn.h 'dlopen("", 0)' $_ld_tmp && _ld_dl="$_ld_tmp" && _dl=yes && break
 done
+fi
 if test "$_dl" = yes ; then
   def_dl='#define HAVE_LIBDL 1'
 else
