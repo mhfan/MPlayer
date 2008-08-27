@@ -1425,11 +1425,11 @@ for ac_option do
 done
 
 # Atmos: moved this here, to be correct, if --prefix is specified
-test -z "$_bindir"  && _bindir="$_prefix/bin"
-test -z "$_datadir" && _datadir="$_prefix/share/mplayer"
-test -z "$_mandir"  && _mandir="$_prefix/share/man"
-test -z "$_confdir" && _confdir="$_prefix/etc/mplayer"
-test -z "$_libdir"  && _libdir="$_prefix/lib"
+test -z "$_bindir"  && _bindir="\$(PREFIX)/bin"	# mhfan
+test -z "$_datadir" && _datadir="\$(PREFIX)/share/mplayer"
+test -z "$_mandir"  && _mandir="\$(PREFIX)/share/man"
+test -z "$_confdir" && _confdir="\$(PREFIX)/etc/mplayer"
+test -z "$_libdir"  && _libdir="\$(PREFIX)/lib"
 
 # Determine our OS name and CPU architecture
 if test -z "$_target" ; then
@@ -7893,7 +7893,8 @@ DOC_LANG_ALL = $doc_lang_all
 MAN_LANGS = $language_man
 MAN_LANG_ALL = $man_lang_all
 
-prefix  = \$(DESTDIR)$_prefix
+PREFIX  = $_prefix
+prefix  = \$(DESTDIR)\$(PREFIX)
 BINDIR  = \$(DESTDIR)$_bindir
 DATADIR = \$(DESTDIR)$_datadir
 LIBDIR  = \$(DESTDIR)$_libdir
