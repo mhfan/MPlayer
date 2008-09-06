@@ -90,6 +90,8 @@
 #define KEY_KPDEL (KEY_KEYPAD+12)
 #define KEY_KPENTER (KEY_KEYPAD+13)
 
+#define BTN_TOUCH (0x100+48)	// XXX:
+
 /* Special keys */
 #define KEY_INTERN (0x1000)
 #define KEY_CLOSE_WIN (KEY_INTERN+0)

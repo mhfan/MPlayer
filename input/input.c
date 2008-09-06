@@ -258,6 +258,7 @@ static const mp_key_name_t key_names[] = {
   { KEY_KPDEC, "KP_DEC" },
   { KEY_KPINS, "KP_INS" },
   { KEY_KPENTER, "KP_ENTER" },
+  { BTN_TOUCH, "BTN_TOUCH" },
   { MOUSE_BTN0, "MOUSE_BTN0" },
   { MOUSE_BTN1, "MOUSE_BTN1" },
   { MOUSE_BTN2, "MOUSE_BTN2" },
@@ -376,6 +377,11 @@ static const mp_key_name_t key_names[] = {
 // The second is the command
 
 static const mp_cmd_bind_t def_cmd_binds[] = {
+
+#ifdef CONFIG_MENU
+  { { BTN_TOUCH , 0 }, "menu click" },
+  { { MOUSE_BTN0, 0 }, "menu click" },
+#endif
 
   { {  MOUSE_BTN3, 0 }, "seek 10" },
   { {  MOUSE_BTN4, 0 }, "seek -10" },
@@ -597,6 +603,15 @@ static int use_ar = 1;
 static int use_ar = 0;
 #endif
 
+#if 1//def CONFIG_TSLIB
+static int use_ts;
+static char* ts_dev = NULL;
+
+int mp_input_ts_exit(int fd);
+int mp_input_ts_init(char* dev);
+int mp_input_ts_read(int fd, char* dest, int size);
+#endif
+
 static char* js_dev = NULL;
 static char* ar_dev = NULL;
 
@@ -615,6 +630,7 @@ static const m_option_t input_conf[] = {
   { "keylist", mp_input_print_key_list, CONF_TYPE_FUNC, CONF_GLOBAL, 0, 0, NULL },
   { "cmdlist", mp_input_print_cmd_list, CONF_TYPE_FUNC, CONF_GLOBAL, 0, 0, NULL },
   { "js-dev", &js_dev, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL },
+  { "ts-dev", &ts_dev, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL },
   { "file", &in_file, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL },
   { "default-bindings", &default_bindings, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { "nodefault-bindings", &default_bindings, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
@@ -631,6 +647,8 @@ static const m_option_t mp_input_opts[] = {
   { "lircc", &use_lircc, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { "noar", &use_ar, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
   { "ar", &use_ar, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
+  { "nots", &use_ts, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
+  { "ts", &use_ts, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
@@ -1818,6 +1836,14 @@ mp_input_init(void) {
   }
 #endif
 
+#ifdef CONFIG_TSLIB
+  if (use_ts) {	int fd;	// XXX:
+      if ((fd = mp_input_ts_init(ts_dev)) < 0) ; else
+	  mp_input_add_cmd_fd(fd, 1, mp_input_ts_read,
+		  (mp_close_func_t)mp_input_ts_exit);
+  }
+#endif
+  
   if(in_file) {
     struct stat st;
     int mode = O_RDONLY;

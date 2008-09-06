@@ -494,6 +494,7 @@ SRCS_MPLAYER-$(ALSA5)        += libao2/ao_alsa5.c
 SRCS_MPLAYER-$(ALSA9)        += libao2/ao_alsa.c
 SRCS_MPLAYER-$(APPLE_IR)     += input/appleir.c
 SRCS_MPLAYER-$(APPLE_REMOTE) += input/ar.c
+SRCS_MPLAYER-$(TSLIB)        += input/tslib.c
 SRCS_MPLAYER-$(ARTS)         += libao2/ao_arts.c
 SRCS_MPLAYER-$(BL)           += libvo/vo_bl.c
 SRCS_MPLAYER-$(CACA)         += libvo/vo_caca.c

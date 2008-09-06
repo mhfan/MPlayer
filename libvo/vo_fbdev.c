@@ -919,7 +919,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
     default:
         mp_msg(MSGT_VO, MSGL_ERR, "visual: %d not yet supported\n",
                fb_finfo.visual);
-        return 1;
+        //return 1;
     }
 
     fb_line_len = fb_finfo.line_length;

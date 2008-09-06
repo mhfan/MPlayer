@@ -329,6 +329,7 @@ Optional features:
   --enable-joystick      enable joystick support [disable]
   --enable-apple-remote  enable Apple Remote input (Mac OS X only) [autodetect]
   --enable-apple-ir      enable Apple IR Remote input (Linux only) [autodetect]
+  --enable-tslib         enable touchscreen input via tslib [autodetect]
   --disable-vm           disable X video mode extensions [autodetect]
   --disable-xf86keysym   disable support for multimedia keys [autodetect]
   --enable-radio         enable radio interface [disable]
@@ -792,6 +793,7 @@ _lirc=auto
 _lircc=auto
 _apple_remote=auto
 _apple_ir=auto
+_tslib=auto
 _gui=no
 _gtk1=no
 _termcap=auto
@@ -1297,6 +1299,8 @@ for ac_option do
   --disable-apple-remote) _apple_remote=no  ;;
   --enable-apple-ir)    _apple_ir=yes   ;;
   --disable-apple-ir)   _apple_ir=no    ;;
+  --enable-tslib)       _tslib=yes      ;;
+  --disable-tslib)      _tslib=no       ;;
   --enable-gui)         _gui=yes        ;;
   --disable-gui)        _gui=no         ;;
   --enable-gtk1)        _gtk1=yes       ;;
@@ -4074,6 +4078,26 @@ else
 fi
 echores "$_apple_ir"
 fi #if linux
+
+echocheck "tslib"
+if test "$_tslib" = auto ; then
+  _tslib=no
+  cat > $TMPC <<EOF
+#include <tslib.h>
+int main(void) {
+  struct tsdev* ts;
+  return 0;
+}
+EOF
+  cc_check -lts && _tslib=yes
+fi
+if test "$_tslib" = yes ; then
+  _def_tslib='#define CONFIG_TSLIB 1'
+  extra_ldflags="$extra_ldflags -lts"
+else
+  _def_tslib='#undef CONFIG_TSLIB'
+fi
+echores "$_tslib"
 
 echocheck "pkg-config"
 _pkg_config=pkg-config
@@ -7987,6 +8011,7 @@ ALSA5 = $_alsa5
 APPLE_IR = $_apple_ir
 APPLE_REMOTE = $_apple_remote
 ARTS = $_arts
+TSLIB = $_tslib
 AUDIO_INPUT = $_audio_input
 BITMAP_FONT = $_bitmap_font
 BL = $_bl
@@ -8506,6 +8531,7 @@ $def_tv_dshow
 $def_tv_v4l
 $def_tv_v4l1
 $def_tv_v4l2
+$_def_tslib
 
 
 /* font stuff */
