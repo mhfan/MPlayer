@@ -914,8 +914,17 @@ static int load_sub_face(const char *name, int face_index, FT_Face *face)
     return err;
 }
 
+char* osd_font_name = NULL;
 static int load_osd_face(FT_Face *face)
 {
+    if (osd_font_name &&
+	    !FT_New_Face(library, osd_font_name, 0, face)) return 0; else {
+	char *font_file = get_path("osd.ttf");		int err;
+	err = FT_New_Face(library, font_file, 0, face);	free(font_file);
+	if (!err || !FT_New_Face(library, MPLAYER_DATADIR "/osd.ttf", 0, face))
+	    return 0; // XXX: mhfan
+    }
+
     if ( FT_New_Memory_Face(library, osd_font_pfb, sizeof(osd_font_pfb), 0, face) ) {
 	mp_msg(MSGT_OSD, MSGL_ERR, MSGTR_LIBVO_FONT_LOAD_FT_NewMemoryFaceFailed);
 	return -1;
@@ -942,6 +951,7 @@ int kerning(font_desc_t *desc, int prevc, int c)
 
 font_desc_t* read_font_desc_ft(const char *fname, int face_index, int movie_width, int movie_height, float font_scale_factor)
 {
+    static int osd_loaded = 0;
     font_desc_t *desc = NULL;
 
     FT_Face face;
@@ -1041,6 +1051,7 @@ font_desc_t* read_font_desc_ft(const char *fname, int face_index, int movie_widt
 
 gen_osd:
 
+  if (!osd_loaded) {	osd_loaded = 1;	// XXX: mhfan
     /* generate the OSD font */
     err = load_osd_face(&face);
     if (err) {
@@ -1056,6 +1067,7 @@ gen_osd:
 	mp_msg(MSGT_OSD, MSGL_ERR, MSGTR_LIBVO_FONT_LOAD_FT_CannotPrepareOSDFont);
 	goto err_out;
     }
+  }
 
     err = generate_tables(desc, subtitle_font_thickness, subtitle_font_radius);
 

@@ -1095,7 +1095,7 @@ static int vo_update_osd_ext(int dxs,int dys, int left_border, int top_border,
     mp_osd_obj_t* obj=vo_osd_list;
     int chg=0;
 #ifdef CONFIG_FREETYPE
-    static int defer_counter = 0, prev_dxs = 0, prev_dys = 0;
+    static int defer_counter = 0, prev_dxs = 0, prev_dys = 0, flag = 0;
 #endif
 
 #ifdef CONFIG_FREETYPE
@@ -1117,6 +1117,7 @@ static int vo_update_osd_ext(int dxs,int dys, int left_border, int top_border,
 	if (defer_counter >= FONT_LOAD_DEFER) force_load_font = 1;
     }
 
+  if (!flag && (!vo_font || !sub_font)) {	flag = 1;	// XXX: mhfan
     if (force_load_font) {
 	force_load_font = 0;
         load_font_ft(dxs, dys, &vo_font, font_name, osd_font_scale_factor);
@@ -1137,6 +1138,7 @@ static int vo_update_osd_ext(int dxs,int dys, int left_border, int top_border,
                load_font_ft(dxs, dys, &sub_font, font_name, text_font_scale_factor);
        }
     }
+  }
 #endif
 
     while(obj){

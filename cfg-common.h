@@ -52,6 +52,7 @@
 #include "mpcommon.h"
 
 
+extern char* osd_font_name;
 
 #ifdef CONFIG_RADIO
 const m_option_t radioopts_conf[]={
@@ -616,6 +617,7 @@ const m_option_t common_opts[] = {
     {"spuaa", &spu_aamode, CONF_TYPE_INT, CONF_RANGE, 0, 31, NULL},
     {"spugauss", &spu_gaussvar, CONF_TYPE_FLOAT, CONF_RANGE, 0.0, 3.0, NULL},
 #ifdef CONFIG_FREETYPE
+    {"osdfont", &osd_font_name, CONF_TYPE_STRING, 0, 0, 0, NULL},
     {"subfont-encoding", &subtitle_font_encoding, CONF_TYPE_STRING, 0, 0, 0, NULL},
     {"subfont-text-scale", &text_font_scale_factor, CONF_TYPE_FLOAT, CONF_RANGE, 0, 100, NULL},
     {"subfont-osd-scale", &osd_font_scale_factor, CONF_TYPE_FLOAT, CONF_RANGE, 0, 100, NULL},
