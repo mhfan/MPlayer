@@ -37,8 +37,15 @@
 
 /* The below includes retrieves functions for converting to and from
    ulaw and alaw */
+#ifndef CONFIG_NO_ULAW_ALAW
 #include "af_format_ulaw.h"
 #include "af_format_alaw.h"
+#else
+#define to_ulaw(...)
+#define to_alaw(...)
+#define from_ulaw(...)
+#define from_alaw(...)
+#endif	/* XXX: by mhfan */
 
 // Switch endianness
 static void endian(void* in, void* out, int len, int bps);
