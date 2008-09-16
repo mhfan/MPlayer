@@ -811,7 +811,7 @@ mencoder$(EXESUF) mplayer$(EXESUF):
 	$(CC) -o $@ $^ $(EXTRALIBS)
 
 codec-cfg$(EXESUF): codec-cfg.c codec-cfg.h help_mp.h
-	$(HOST_CC) -O -DCODECS2HTML -I. -Iffmpeg -o $@ $<
+	$(HOST_CC) $(CFLAGS) -O -DCODECS2HTML -I. -Iffmpeg -o $@ $<
 
 codecs.conf.h: codec-cfg$(EXESUF) etc/codecs.conf
 	./$^ > $@

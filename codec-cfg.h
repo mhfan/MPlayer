@@ -74,6 +74,7 @@ typedef struct codecs {
     short flags;
     short status;
     short cpuflags;
+    short pick;
 } codecs_t;
 
 int parse_codec_cfg(const char *cfgfile);

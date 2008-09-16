@@ -78,6 +78,8 @@
 static int codecs_conf_release;
 char * codecs_file = NULL;
 
+static void codecs_free(codecs_t* codecs,int count);
+
 static int add_to_fourcc(char *s, char *alias, unsigned int *fourcc,
                          unsigned int *map)
 {
@@ -366,7 +368,8 @@ static short get_driver(char *s,int audioflag)
 static int validate_codec(codecs_t *c, int type)
 {
     unsigned int i;
-    char *tmp_name = c->name;
+    char *tmp_name;
+    if (!c) return 1; else tmp_name = c->name;
 
     for (i = 0; i < strlen(tmp_name) && isalnum(tmp_name[i]); i++)
         /* NOTHING */;
@@ -645,17 +648,30 @@ int parse_codec_cfg(const char *cfgfile)
                 mp_msg(MSGT_CODECCFG,MSGL_ERR,MSGTR_CantStrdupName, strerror(errno));
                 goto err_out;
             }
+	    if (get_token(1, 1) < 0) {
+#ifdef	CONFIG_DISCARD_CODEC
+		codec->pick = 0;
+#else
+		codec->pick = 1;
+#endif	/* XXX: by mhfan */
+	    } else
+	    if (!strcmp(token[0], "discard")) codec->pick = 0; else
+	    if (!strcmp(token[0], "pick")) codec->pick = 1;
         } else if (!strcmp(token[0], "info")) {
             if (codec->info || get_token(1, 1) < 0)
                 goto err_out_parse_error;
+#ifndef CONFIG_SMALL
             if (!(codec->info = strdup(token[0]))) {
                 mp_msg(MSGT_CODECCFG,MSGL_ERR,MSGTR_CantStrdupInfo, strerror(errno));
                 goto err_out;
             }
+#endif	/* XXX: by mhfan */
         } else if (!strcmp(token[0], "comment")) {
             if (get_token(1, 1) < 0)
                 goto err_out_parse_error;
+#ifndef CONFIG_SMALL
             add_comment(token[0], &codec->comment);
+#endif	/* XXX: by mhfan */
         } else if (!strcmp(token[0], "fourcc")) {
             if (get_token(1, 2) < 0)
                 goto err_out_parse_error;
@@ -788,16 +804,16 @@ static void codecs_free(codecs_t* codecs,int count) {
             free(codecs[i].dll);
             free(codecs[i].drv);
         }
-    free(codecs);
+    //free(codecs);
 }
 
 void codecs_uninit_free(void) {
     if (video_codecs)
     codecs_free(video_codecs,nr_vcodecs);
-    video_codecs=NULL;
+    free(video_codecs); video_codecs=NULL;
     if (audio_codecs)
     codecs_free(audio_codecs,nr_acodecs);
-    audio_codecs=NULL;
+    free(audio_codecs); audio_codecs=NULL;
 }
 
 codecs_t *find_audio_codec(unsigned int fourcc, unsigned int *fourccmap,
@@ -1057,6 +1073,8 @@ int main(int argc, char* argv[])
         for (i=0; i<2; i++) {
             printf("const codecs_t %s[] = {\n", nm[i]);
             for (j = 0; j < nr[i]; j++) {
+		if (!cod[i][j].pick) continue;
+
                 printf("{");
 
                 print_int_array(cod[i][j].fourcc, CODECS_MAX_FOURCC);
