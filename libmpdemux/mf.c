@@ -46,6 +46,7 @@ int    mf_w = 0; //352; // let codecs to detect it
 int    mf_h = 0; //288;
 double mf_fps = 25.0;
 char * mf_type = NULL; //"jpg";
+int    mf_loop = 0;
 
 mf_t* open_mf(char * filename){
 #if defined(HAVE_GLOB) || defined(__MINGW32__)

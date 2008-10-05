@@ -23,6 +23,7 @@ extern int    mf_w;
 extern int    mf_h;
 extern double mf_fps;
 extern char * mf_type;
+extern int    mf_loop;
 
 typedef struct
 {

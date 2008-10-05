@@ -35,13 +35,13 @@
 static void demux_seek_mf(demuxer_t *demuxer,float rel_seek_secs,float audio_delay,int flags){
   mf_t * mf = (mf_t *)demuxer->priv;
   sh_video_t   * sh_video = demuxer->video->sh;
-  int newpos = (flags & SEEK_ABSOLUTE)?0:mf->curr_frame - 1;
+  int newpos = (flags & SEEK_ABSOLUTE)?0:demuxer->filepos - 1;
 
   if ( flags & SEEK_FACTOR ) newpos+=rel_seek_secs*(mf->nr_of_files - 1);
    else newpos+=rel_seek_secs * sh_video->fps;
   if ( newpos < 0 ) newpos=0;
-  if( newpos >= mf->nr_of_files) newpos=mf->nr_of_files - 1;
-  demuxer->filepos=mf->curr_frame=newpos;
+  if (!mf_loop && newpos >= mf->nr_of_files) newpos=mf->nr_of_files - 1;
+  demuxer->filepos=newpos;
 }
 
 // return value:
@@ -53,7 +53,9 @@ static int demux_mf_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds){
   FILE         * f;
 
   mf=(mf_t*)demuxer->priv;
-  if ( mf->curr_frame >= mf->nr_of_files ) return 0;
+  if ( mf->curr_frame >= mf->nr_of_files ) {
+    if (mf_loop) mf->curr_frame = 0; else return 0;	// XXX: mhfan
+  }
 
   stat( mf->names[mf->curr_frame],&fs );
 //  printf( "[demux_mf] frame: %d (%s,%d)\n",mf->curr_frame,mf->names[mf->curr_frame],fs.st_size );
@@ -63,15 +65,14 @@ static int demux_mf_fill_buffer(demuxer_t *demuxer, demux_stream_t *ds){
    sh_video_t     * sh_video = demuxer->video->sh;
    demux_packet_t * dp = new_demux_packet( fs.st_size );
    if ( !fread( dp->buffer,fs.st_size,1,f ) ) return 0;
-   dp->pts=mf->curr_frame / sh_video->fps;
-   dp->pos=mf->curr_frame;
+   dp->pts= demuxer->filepos / sh_video->fps;	dp->pos= demuxer->filepos;
    dp->flags=0;
    // append packet to DS stream:
    ds_add_packet( demuxer->video,dp );
   }
   fclose( f );
 
-  demuxer->filepos=mf->curr_frame++;
+  ++demuxer->filepos; mf->curr_frame++;
   return 1;
 }
 
@@ -82,6 +83,7 @@ static const struct {
   uint32_t format;
 } type2format[] = {
   { "bmp",  mmioFOURCC('b', 'm', 'p', ' ') },
+  { "png",  mmioFOURCC('M', 'P', 'N', 'G') },
   { "dpx",  mmioFOURCC('d', 'p', 'x', ' ') },
   { "j2k",  mmioFOURCC('M', 'J', '2', 'C') },
   { "jp2",  mmioFOURCC('M', 'J', '2', 'C') },
@@ -91,7 +93,6 @@ static const struct {
   { "thm",  mmioFOURCC('I', 'J', 'P', 'G') },
   { "db",   mmioFOURCC('I', 'J', 'P', 'G') },
   { "pcx",  mmioFOURCC('p', 'c', 'x', ' ') },
-  { "png",  mmioFOURCC('M', 'P', 'N', 'G') },
   { "ptx",  mmioFOURCC('p', 't', 'x', ' ') },
   { "tga",  mmioFOURCC('M', 'T', 'G', 'A') },
   { "tif",  mmioFOURCC('t', 'i', 'f', 'f') },

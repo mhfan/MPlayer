@@ -178,12 +178,15 @@ const m_option_t vivoopts_conf[]={
     {NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
+extern int mf_loop;
+
 const m_option_t mfopts_conf[]={
     {"on", "-mf on has been removed, use mf:// instead.\n", CONF_TYPE_PRINT, 0, 0, 1, NULL},
     {"w", &mf_w, CONF_TYPE_INT, 0, 0, 0, NULL},
     {"h", &mf_h, CONF_TYPE_INT, 0, 0, 0, NULL},
     {"fps", &mf_fps, CONF_TYPE_DOUBLE, 0, 0, 0, NULL},
     {"type", &mf_type, CONF_TYPE_STRING, 0, 0, 0, NULL},
+    {"loop", &mf_loop, CONF_TYPE_INT, 0, 1, 1, NULL},
     {NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
