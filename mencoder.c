@@ -113,6 +113,8 @@ float stream_cache_min_percent=20.0;
 float stream_cache_seek_min_percent=50.0;
 #endif
 
+int vo_screenwidth = 0, vo_screenheight = 0;
+
 int audio_id=-1;
 int video_id=-1;
 int dvdsub_id=-1;

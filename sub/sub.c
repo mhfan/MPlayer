@@ -192,12 +192,12 @@ no_utf8:
 
 inline static void vo_update_text_osd(mp_osd_obj_t* obj,int dxs,int dys){
 	const char *cp=vo_osd_text;
-	int x=20;
+	int x=8;
 	int h=0;
 	int font;
 
         obj->bbox.x1=obj->x=x;
-        obj->bbox.y1=obj->y=10;
+        obj->bbox.y1=obj->y=5;	// XXX: mhfan
 
         while (*cp){
           uint16_t c=utf8_get_char(&cp);

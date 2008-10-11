@@ -230,6 +230,12 @@ static int config(struct vf_instance *vf,
       round_h = 1;
     }
 
+    if (vf->priv->w == -4 && vf->priv->h == -4) {
+	extern int vo_screenwidth, vo_screenheight;
+	vf->priv->w = vo_screenwidth;
+	vf->priv->h = vo_screenheight;
+    } else	// XXX: mhfan
+
     if (vf->priv->w < -3 || vf->priv->h < -3 ||
          (vf->priv->w < -1 && vf->priv->h < -1)) {
       // TODO: establish a direct connection to the user's brain

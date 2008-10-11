@@ -579,8 +579,6 @@ static int fb_pixel_size;       // 32:  4  24:  3  16:  2  15:  2
 static int fb_bpp;              // 32: 32  24: 24  16: 16  15: 15
 static int fb_bpp_we_want;      // 32: 32  24: 24  16: 16  15: 15
 static int fb_line_len;
-static int fb_xres;
-static int fb_yres;
 static int fb_page;
 static void (*draw_alpha_p)(int w, int h, unsigned char *src,
                             unsigned char *srca, int stride,
@@ -588,8 +586,6 @@ static void (*draw_alpha_p)(int w, int h, unsigned char *src,
 
 static int in_width;
 static int in_height;
-static int out_width;
-static int out_height;
 static int first_row;
 static int last_row;
 static uint32_t pixel_format;
@@ -760,6 +756,10 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
     struct fb_cmap *cmap;
     int vm   = flags & VOFLAG_MODESWITCHING;
     int zoom = flags & VOFLAG_SWSCALE;
+
+    extern int vo_dwidth, vo_dheight;
+    int out_width, out_height;
+    int fb_xres, fb_yres;
 
     fs = flags & VOFLAG_FULLSCREEN;
 
@@ -1005,6 +1005,8 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
         }
     }
 
+    vo_dwidth = out_width, vo_dheight = out_height;
+
     vt_set_textarea(last_row, fb_yres);
 
     return 0;
@@ -1068,10 +1070,10 @@ static void flip_page(void)
     if (!vo_doublebuffering)
         return;
 
-    fb_vinfo.yoffset = fb_page * fb_yres;
+    fb_vinfo.yoffset = fb_page * fb_vinfo.yres;
     ioctl(fb_dev_fd, FBIOPAN_DISPLAY, &fb_vinfo);
 
-    center += page_delta * fb_yres * fb_line_len;
+    center += page_delta * fb_vinfo.yres * fb_line_len;
     fb_page = next_page;
 }
 
@@ -1157,6 +1159,11 @@ static int control(uint32_t request, void *data)
         return get_image(data);
     case VOCTRL_QUERY_FORMAT:
         return query_format(*(uint32_t*)data);
+    case VOCTRL_UPDATE_SCREENINFO:
+	vo_screenwidth  = fb_vinfo.xres;
+	vo_screenheight = fb_vinfo.yres;
+	aspect_save_screenres(vo_screenwidth, vo_screenheight);
+	return VO_TRUE;
     }
 
 #ifdef CONFIG_VIDIX

@@ -110,6 +110,7 @@ static void (*draw_alpha_p)(int w, int h, unsigned char *src,
 static uint8_t *next_frame = NULL; // for double buffering
 static int in_width;
 static int in_height;
+extern int vo_dwidth, vo_dheight;
 
 static struct fb_cmap *make_directcolor_cmap(struct fb_var_screeninfo *var)
 {
@@ -293,7 +294,11 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width,
 		return 1;
 	}
 #endif
-	if (fs) memset(frame_buffer, '\0', fb_line_len * fb_vinfo.yres);
+	if (fs) {
+	    vo_dwidth  = fb_vinfo.xres;
+	    vo_dheight = fb_vinfo.yres;
+	    memset(frame_buffer, '\0', fb_line_len * fb_vinfo.yres);
+	} else vo_dwidth = width, vo_dheight = height;
 
 	return 0;
 }
