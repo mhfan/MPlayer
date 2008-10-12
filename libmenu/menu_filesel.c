@@ -342,6 +342,7 @@ static void read_cmd(menu_t* menu,int cmd) {
   switch(cmd) {
   case MENU_CMD_LEFT:
     mpriv->p.current = mpriv->p.menu; // Hack : we consider that the first entry is ../
+    if (!strcmp(mpriv->dir, menu_chroot)) break;	// XXX:
   case MENU_CMD_RIGHT:
   case MENU_CMD_OK: {
     // Directory

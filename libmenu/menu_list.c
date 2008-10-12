@@ -268,7 +268,11 @@ void menu_list_read_cmd(menu_t* menu,int cmd) {
   case MENU_CMD_CLICK:
     if (mouse_x >= selection_x && mouse_x < selection_x + selection_w &&
         mouse_y >= selection_y && mouse_y < selection_y + selection_h)
-      menu_read_cmd(menu, MENU_CMD_OK);
+      menu_read_cmd(menu, MENU_CMD_OK); else // XXX: mhfan
+    if (mouse_x < mpriv->x || mpriv->x + mpriv->w < mouse_x ||
+	mouse_y < mpriv->y || mpriv->y + mpriv->h < mouse_y) {
+	menu->show = 0, menu->cl = 1;
+    }
     break;
   }
 }
