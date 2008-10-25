@@ -233,6 +233,9 @@ static int query_format(struct vf_instance *vf, unsigned int fmt){
 
 static int open_vf(vf_instance_t *vf, char* args){
   if(!st_priv) {
+    extern int use_menu;
+    if (!use_menu) return 0;
+    if (!args) args = "main";
     st_priv = calloc(1,sizeof(struct vf_priv_s));
     st_priv->root = st_priv->current = menu_open(args);
     if(!st_priv->current) {

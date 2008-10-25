@@ -111,6 +111,7 @@ extern const vf_info_t vf_info_divtc;
 extern const vf_info_t vf_info_harddup;
 extern const vf_info_t vf_info_softskip;
 extern const vf_info_t vf_info_screenshot;
+extern const vf_info_t vf_info_menu;
 extern const vf_info_t vf_info_ass;
 extern const vf_info_t vf_info_mcdeint;
 extern const vf_info_t vf_info_yadif;
@@ -202,6 +203,9 @@ static const vf_info_t* const filter_list[]={
     &vf_info_divtc,
     &vf_info_harddup,
     &vf_info_softskip,
+#ifdef CONFIG_MENU
+    &vf_info_menu,
+#endif
 #ifdef CONFIG_ASS
     &vf_info_ass,
 #endif

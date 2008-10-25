@@ -2316,8 +2316,10 @@ int reinit_video_chain(void)
         sh_video->vfilter = vf_open_filter(NULL, "vo", vf_arg);
     }
 #ifdef CONFIG_MENU
-    if (use_menu) {
+    if (use_menu) {	int i;
         char *vf_arg[] = { "_oldargs_", menu_root, NULL };
+	if (vf_settings) for (i = 0; vf_settings[i].name; ++i)	// XXX: mhfan
+	    if (!strcmp(vf_settings[i].name, "menu")) goto skip_menu;
         vf_menu = vf_open_plugin(libmenu_vfs, sh_video->vfilter, "menu", vf_arg);
         if (!vf_menu) {
             mp_msg(MSGT_CPLAYER, MSGL_ERR, MSGTR_CantOpenLibmenuFilterWithThisRootMenu, menu_root);
@@ -2326,6 +2328,7 @@ int reinit_video_chain(void)
     }
     if (vf_menu)
         sh_video->vfilter = vf_menu;
+skip_menu:
 #endif
 
 #ifdef CONFIG_ASS
