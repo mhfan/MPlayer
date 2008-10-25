@@ -1163,6 +1163,7 @@ static demuxer_t *demux_open_stream(stream_t *stream, int file_format,
     return demuxer;
 }
 
+char *video_stream = NULL;
 char *audio_stream = NULL;
 char *sub_stream = NULL;
 int audio_stream_cache = 0;
@@ -1178,7 +1179,7 @@ demuxer_t *demux_open(stream_t *vs, int file_format, int audio_id,
     demuxer_t *vd, *ad = NULL, *sd = NULL;
     demuxer_t *res;
     int afmt = DEMUXER_TYPE_UNKNOWN, sfmt = DEMUXER_TYPE_UNKNOWN;
-    int demuxer_type;
+    int demuxer_type, vfmt = DEMUXER_TYPE_UNKNOWN;	// XXX:
     int audio_demuxer_type = 0, sub_demuxer_type = 0;
     int demuxer_force = 0, audio_demuxer_force = 0, sub_demuxer_force = 0;
 
@@ -1262,6 +1263,21 @@ demuxer_t *demux_open(stream_t *vs, int file_format, int audio_id,
                    MSGTR_OpeningSubtitlesDemuxerFailed, sub_stream);
             free_stream(ss);
         }
+    }
+    if (!vd->video->sh && video_stream) {
+	vs = open_stream(video_stream, 0, &vfmt);
+	if (!vs) {
+	    mp_msg(MSGT_DEMUXER, MSGL_ERR, "Can't open video stream: %s!\n",
+		    video_stream);	return NULL;
+	}   ad = vd;	// XXX:
+	vd = demux_open_stream(vs, vfmt, demuxer_force,
+		-2, video_id, -2, video_stream);
+	if (!vd) {
+            mp_msg(MSGT_DEMUXER, MSGL_WARN,
+                   "Fail to open video stream: %s!\n", video_stream);
+            free_stream(vs);
+	    vd = ad, ad = NULL;
+	}
     }
 
     if (ad && sd)
@@ -1477,6 +1493,9 @@ int demuxer_get_current_time(demuxer_t *demuxer)
     sh_video_t *sh_video = demuxer->video->sh;
     if (demuxer->stream_pts != MP_NOPTS_VALUE)
         get_time_ans = demuxer->stream_pts;
+    else if (0 && demuxer->video->demuxer->type == DEMUXER_TYPE_MF &&
+	    demuxer->audio != demuxer->video)
+	get_time_ans = ((sh_audio_t*)demuxer->audio->sh)->pts;
     else if (sh_video)
         get_time_ans = sh_video->pts;
     return (int) get_time_ans;

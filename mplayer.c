@@ -2165,6 +2165,8 @@ static int fill_audio_out_buffers(void)
         }
         if (!format_change && res < 0) // EOF or error
             if (mpctx->d_audio->eof) {
+		if (mpctx->d_video->demuxer->type == DEMUXER_TYPE_MF)
+		    mpctx->eof = PT_NEXT_ENTRY;	// XXX:
                 audio_eof = 1;
                 if (sh_audio->a_out_buffer_len == 0)
                     return 0;

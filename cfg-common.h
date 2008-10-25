@@ -152,6 +152,8 @@ const m_option_t pvropts_conf[]={
 };
 #endif /* CONFIG_PVR */
 
+extern char* video_stream;
+
 const m_option_t scaler_filter_conf[]={
     {"lgb", &sws_lum_gblur, CONF_TYPE_FLOAT, 0, 0, 100.0, NULL},
     {"cgb", &sws_chr_gblur, CONF_TYPE_FLOAT, 0, 0, 100.0, NULL},
@@ -447,6 +449,7 @@ const m_option_t common_opts[] = {
     { "cdda", &cdda_opts, CONF_TYPE_SUBCONFIG, 0, 0, 0, NULL},
 #endif
 
+    { "videofile", &video_stream, CONF_TYPE_STRING, 0, 0, 0, NULL },
     // demuxer.c - select audio/sub file/demuxer
     { "audiofile", &audio_stream, CONF_TYPE_STRING, 0, 0, 0, NULL },
     { "audiofile-cache", &audio_stream_cache, CONF_TYPE_INT, CONF_RANGE, 50, 65536, NULL},
