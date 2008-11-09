@@ -45,6 +45,7 @@ demuxer_t*  new_demuxers_demuxer(demuxer_t* vd, demuxer_t* ad, demuxer_t* sd) {
   priv->sd = sd;
   ret->priv = priv;
 
+  ret->stream_pts = MP_NOPTS_VALUE;
   ret->type = ret->file_format = DEMUXER_TYPE_DEMUXERS;
   ret->seekable = vd->seekable && ad->seekable && sd->seekable;
 
@@ -151,13 +152,14 @@ static void demux_close_demuxers(demuxer_t* demuxer) {
 
 
 static int demux_demuxers_control(demuxer_t *demuxer,int cmd, void *arg){
-  dd_priv_t* priv = demuxer->priv;
+  dd_priv_t* priv = demuxer->priv;	  demuxer_t* vd = priv->vd; // XXX:
+  if (priv->vd->type == DEMUXER_TYPE_MF && priv->ad) vd = priv->ad;
   switch (cmd) {
     case DEMUXER_CTRL_GET_TIME_LENGTH:
-      *((double *)arg) = demuxer_get_time_length(priv->vd);
+      *((double *)arg) = demuxer_get_time_length(vd);
       return DEMUXER_CTRL_OK;
     case DEMUXER_CTRL_GET_PERCENT_POS:
-      *((int *)arg) = demuxer_get_percent_pos(priv->vd);
+      *((int *)arg) = demuxer_get_percent_pos(vd);
       return DEMUXER_CTRL_OK;
     case DEMUXER_CTRL_CORRECT_PTS:
       return demux_control(priv->vd, DEMUXER_CTRL_CORRECT_PTS, NULL);
