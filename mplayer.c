@@ -2375,6 +2375,15 @@ skip_menu:
     sh_video->vfilter = append_filters(sh_video->vfilter);
     eosd_init(sh_video->vfilter);
 
+#ifdef CONFIG_MENU
+  if (use_menu && !vf_menu) {	vf_instance_t* vf;
+      for (vf = sh_video->vfilter; vf; vf = vf->next)
+	  if (!strcmp(vf->info->name, "menu")) {
+	      vf_menu = vf; break;
+	  }
+  }
+#endif
+
 #ifdef CONFIG_ASS
     if (ass_enabled)
         eosd_ass_init(ass_library);
@@ -2568,7 +2577,7 @@ static void pause_loop(void)
     if (mpctx->audio_out && mpctx->sh_audio)
         mpctx->audio_out->pause();  // pause audio, keep data if possible
 
-    while ((cmd = mp_input_get_cmd(20, 1, 1)) == NULL || cmd->pausing == 4) {
+    while ((cmd = mp_input_get_cmd(20, 1, 1)) == NULL || cmd->pausing > 3) {
         if (cmd) {
             cmd = mp_input_get_cmd(0, 1, 0);
             run_command(mpctx, cmd);

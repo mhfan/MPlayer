@@ -3518,6 +3518,7 @@ int run_command(MPContext *mpctx, mp_cmd_t *cmd)
         }
 
     switch (cmd->pausing) {
+    case 5:	// "pausing_blank"
     case 1:     // "pausing"
         mpctx->osd_function = OSD_PAUSE;
         break;

@@ -56,9 +56,12 @@ struct vf_priv_s {
 
 static int put_image(struct vf_instance *vf, mp_image_t *mpi, double pts);
 
+int pausing_blank = 0;
 void vf_menu_pause_update(struct vf_instance *vf) {
   const vo_functions_t *video_out = mpctx_get_video_out(vf->priv->current->ctx);
   if(pause_mpi) {
+    if (pausing_blank) pausing_blank = 0, vf->priv->current->show = 0,
+	vf_mpi_clear(pause_mpi, 0, 0, pause_mpi->width, pause_mpi->height);
     put_image(vf,pause_mpi, MP_NOPTS_VALUE);
     // Don't draw the osd atm
     //vf->control(vf,VFCTRL_DRAW_OSD,NULL);

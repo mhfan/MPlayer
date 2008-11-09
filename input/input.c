@@ -798,6 +798,11 @@ mp_input_parse_cmd(char* str) {
   } else if (strncmp(str, "pausing_keep_force ", 19) == 0) {
     pausing = 4;
     str = &str[19];
+#ifdef CONFIG_MENU
+  } else if (strncmp(str, "pausing_blank ", 14) == 0) {	// XXX: mhfan
+    extern int pausing_blank;	pausing_blank = 1;
+    pausing = 5;	str = &str[14];
+#endif
   }
 
   for(ptr = str ; ptr[0] != '\0'  && ptr[0] != '\t' && ptr[0] != ' ' ; ptr++)
