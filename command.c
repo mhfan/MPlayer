@@ -2922,9 +2922,13 @@ int run_command(MPContext *mpctx, mp_cmd_t *cmd)
                 play_tree_t *e = play_tree_new();
                 play_tree_add_file(e, cmd->args[0].v.s);
 
-                if (cmd->args[1].v.i)   // append
-                    play_tree_append_entry(mpctx->playtree->child, e);
-                else {
+		if (cmd->args[1].v.i) { // append
+		    if (1 < cmd->args[1].v.i) { // XXX: mhfan
+			    play_tree_prepend_entry(mpctx->playtree->child, e);
+			    pt_iter_goto_head(mpctx->playtree_iter);
+			    mpctx->eof = PT_NEXT_SRC;
+		    } else  play_tree_append_entry(mpctx->playtree->child, e);
+		} else {
                     // Go back to the starting point.
                     while (play_tree_iter_up_step
                            (mpctx->playtree_iter, 0, 1) != PLAY_TREE_ITER_END)

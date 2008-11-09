@@ -74,7 +74,7 @@ static struct menu_priv_s cfg_dflt = {
 
   NULL,
   "Select a file: %p",
-  "loadfile '%p'",
+  "loadfile '%p' 2",	// XXX:
   NULL,
   NULL,
   NULL
