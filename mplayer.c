@@ -1566,11 +1566,23 @@ void set_osd_subtitle(subtitle *subs)
 static void update_osd_msg(void)
 {
     mp_osd_msg_t *msg;
-    static char osd_text[128] = "";
+    static char osd_text[256] = "";
     static char osd_text_timer[128];
 
     // we need some mem for vo_osd_text
     vo_osd_text = (unsigned char *)osd_text;
+
+    if (osdc) {
+	static time_t lt = 0;
+	time_t t = time(NULL);
+	if (lt < t) {	lt = t;
+	    static char osd_rtc[16] = "";
+	    struct tm* tm = localtime(&t);
+	    snprintf(osd_rtc, 63, "%02d:%02d:%02d",
+		    tm->tm_hour, tm->tm_min, tm->tm_sec);
+	    vo_osd_rtc = osd_rtc;	vo_osd_changed(OSDTYPE_RTC);
+	}
+    }
 
     // Look if we have a msg
     if ((msg = get_osd_msg())) {
@@ -1586,6 +1598,12 @@ static void update_osd_msg(void)
 
     if (mpctx->sh_video) {
         // fallback on the timer
+	if (0 && osd_level == 5) {
+	    time_t lt = time(NULL);
+	    struct tm* tm = localtime(&lt);
+	    snprintf(osd_text_timer, 63, "%02d:%02d:%02d",
+		    tm->tm_hour, tm->tm_min, tm->tm_sec);
+	} else
         if (osd_level >= 2) {
             int len = demuxer_get_time_length(mpctx->demuxer);
             int percentage = -1;
@@ -3612,10 +3630,12 @@ goto_enable_cache:
 
 //================== MAIN: ==========================
     current_module = "main";
+    clear_osd_msgs();
 
     if (playing_msg) {
         char *msg = property_expand_string(mpctx, playing_msg);
-        mp_msg(MSGT_CPLAYER, MSGL_INFO, "%s", msg);
+	set_osd_msg(OSD_MSG_TEXT, 1, osd_duration, msg);
+        mp_msg(MSGT_CPLAYER, MSGL_INFO, "%s\n", msg);
         free(msg);
     }
 
@@ -3629,7 +3649,6 @@ goto_enable_cache:
 
         // Make sure old OSD does not stay around,
         // e.g. with -fixed-vo and same-resolution files
-        clear_osd_msgs();
         update_osd_msg();
 
 //================ SETUP AUDIO ==========================

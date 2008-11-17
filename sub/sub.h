@@ -29,6 +29,7 @@ typedef struct mp_osd_bbox_s {
 #define OSDTYPE_SPU 4
 #define OSDTYPE_DVDNAV 5
 #define OSDTYPE_TELETEXT 6
+#define OSDTYPE_RTC 7
 
 #define OSDFLAG_VISIBLE 1
 #define OSDFLAG_CHANGED 2
@@ -72,6 +73,7 @@ typedef struct mp_osd_obj_s {
 extern sub_data* subdata; //currently used subtitles
 extern subtitle* vo_sub;
 
+extern unsigned char* vo_osd_rtc;
 extern unsigned char* vo_osd_text;
 
 extern void* vo_osd_teletext_page;

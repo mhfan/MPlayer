@@ -36,6 +36,7 @@
 #include "libvo/vo_zr.h"
 #include "mp_fifo.h"
 
+extern int osdc;
 
 const m_option_t vd_conf[]={
     {"help", "Use MPlayer with an appropriate video file instead of live partners to avoid vd.\n", CONF_TYPE_PRINT, CONF_NOCFG|CONF_GLOBAL, 0, 0, NULL},
@@ -233,6 +234,7 @@ const m_option_t mplayer_opts[]={
     {"crash-debug", &crash_debug, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
     {"nocrash-debug", &crash_debug, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL},
 #endif
+    {"osdc", &osdc, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL},
     {"osdlevel", &osd_level, CONF_TYPE_INT, CONF_RANGE, 0, 3, NULL},
     {"osd-duration", &osd_duration, CONF_TYPE_INT, CONF_MIN, 0, 0, NULL},
     {"osd-fractions", &osd_fractions, CONF_TYPE_INT, CONF_RANGE, 0, 2, NULL},

@@ -85,6 +85,7 @@ char * sub_osd_names_short[] ={ "", "|>", "||", "[]", "<<" , ">>", "", "", "", "
 font_desc_t* vo_font=NULL;
 font_desc_t* sub_font=NULL;
 
+unsigned char* vo_osd_rtc=NULL;
 unsigned char* vo_osd_text=NULL;
 void* vo_osd_teletext_page=NULL;
 int vo_osd_teletext_half = 0;
@@ -190,12 +191,14 @@ no_utf8:
   return c;
 }
 
+int osdc = 0;
 inline static void vo_update_text_osd(mp_osd_obj_t* obj,int dxs,int dys){
 	const char *cp=vo_osd_text;
 	int x=8;
 	int h=0;
 	int font;
 
+	if (obj->type == OSDTYPE_RTC) cp = vo_osd_rtc; else
         obj->bbox.x1=obj->x=x;
         obj->bbox.y1=obj->y=5;	// XXX: mhfan
 
@@ -206,13 +209,18 @@ inline static void vo_update_text_osd(mp_osd_obj_t* obj,int dxs,int dys){
 	  h=get_height(c,h);
         }
 
+	if (obj->type == OSDTYPE_RTC) {
+	    obj->bbox.x1 = obj->x = dxs - x - 8;
+	    obj->bbox.x2 = dxs - vo_font->charspace;
+	    cp = vo_osd_rtc;
+	} else cp=vo_osd_text,
+
 	obj->bbox.x2=x-vo_font->charspace;
 	obj->bbox.y2=obj->bbox.y1+h;
 	obj->flags|=OSDFLAG_BBOX;
 
 	alloc_buf(obj);
 
-	cp=vo_osd_text;
 	x = obj->x;
         while (*cp){
           uint16_t c=utf8_get_char(&cp);
@@ -1168,8 +1176,10 @@ static int vo_update_osd_ext(int dxs,int dys, int left_border, int top_border,
 	    else
 		obj->flags&=~OSDFLAG_VISIBLE;
 	    break;
+	case OSDTYPE_RTC: if (!osdc) break;
 	case OSDTYPE_OSD:
-	    if(vo_font && vo_osd_text && vo_osd_text[0]){
+	    if(vo_font && ((vo_osd_text && vo_osd_text[0])
+		       ||  (vo_osd_rtc  && vo_osd_rtc[0]))) {
 		vo_update_text_osd(obj,dxs,dys); // update bbox
 		obj->flags|=OSDFLAG_VISIBLE|OSDFLAG_CHANGED;
 	    } else
@@ -1222,6 +1232,7 @@ void vo_init_osd(void){
     if(vo_osd_list) free_osd_list();
     // temp hack, should be moved to mplayer/mencoder later
     new_osd_obj(OSDTYPE_OSD);
+    new_osd_obj(OSDTYPE_RTC);
     new_osd_obj(OSDTYPE_SUBTITLE);
     new_osd_obj(OSDTYPE_PROGBAR);
     new_osd_obj(OSDTYPE_SPU);
@@ -1270,6 +1281,7 @@ void vo_draw_text_ext(int dxs, int dys, int left_border, int top_border,
         case OSDTYPE_DVDNAV:
 #endif
 	case OSDTYPE_TELETEXT:
+	case OSDTYPE_RTC:
 	case OSDTYPE_OSD:
 	case OSDTYPE_SUBTITLE:
 	case OSDTYPE_PROGBAR:
