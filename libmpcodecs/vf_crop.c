@@ -35,9 +35,10 @@
 static const struct vf_priv_s {
     int crop_w,crop_h;
     int crop_x,crop_y;
+    int crop_a;	// mhfan
 } vf_priv_dflt = {
   -1,-1,
-  -1,-1
+  -1,-1, 0	// mhfan
 };
 
 //===========================================================================//
@@ -71,6 +72,20 @@ static int config(struct vf_instance *vf,
 	    vf->priv->crop_x&=~1;
 	}
     }
+
+#if 1   /* comment by mhfan */
+    if (vf->priv->crop_a > 0) {
+        int dw = vf->priv->crop_w - width;
+        int dh = vf->priv->crop_h - height;
+        int w  = width  * vf->priv->crop_a / 100;
+        int h  = height * vf->priv->crop_a / 100;
+        if (dw < 0) dw = -dw;   if (dh < 0) dh = -dh;
+        if (vf->priv->crop_w == width || vf->priv->crop_h == height ||
+                w > dw && h > dh)
+            vf->priv->crop_w  = width,   vf->priv->crop_h  = height;
+    }
+#endif  /* comment by mhfan */
+
     // check:
     if(vf->priv->crop_w+vf->priv->crop_x>width ||
        vf->priv->crop_h+vf->priv->crop_y>height){
@@ -174,6 +189,7 @@ static const m_option_t vf_opts_fields[] = {
   {"h", ST_OFF(crop_h), CONF_TYPE_INT, M_OPT_MIN,0 ,0, NULL},
   {"x", ST_OFF(crop_x), CONF_TYPE_INT, M_OPT_MIN,-1 ,0, NULL},
   {"y", ST_OFF(crop_y), CONF_TYPE_INT, M_OPT_MIN,-1 ,0, NULL},
+  {"a", ST_OFF(crop_a), CONF_TYPE_INT, M_OPT_MIN, 0, 0, NULL},	// mhfan
   { NULL, NULL, 0, 0, 0, 0,  NULL }
 };
 
