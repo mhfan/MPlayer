@@ -74,7 +74,15 @@ int mp3_read(char *buf,int size);
 
 /*       Frame reader           */
 
+#if 0
 #define MAXFRAMESIZE 1280
+#else// XXX: by mhfan
+#define MAXFRAMESIZE  1792
+//#define MAXFRAMESIZE	((384*(256/8)/ 8+1)*4)	// (6148) for MPEG V2/2.5 L1
+//#define MAXFRAMESIZE	(1152*(160/8)/ 8+1)	// (2881) for MPEG V2/2.5 L2/3
+//#define MAXFRAMESIZE	((384*(448/8)/32+1)*4)	// (2692) for MPEG V1     L1
+//#define MAXFRAMESIZE	(1152*(384/8)/32+1)	// (1729) for MPEG V1     L2/3
+#endif
 #define MAXFRAMESIZE2 (512+MAXFRAMESIZE)
 
 static int fsizeold=0,ssize=0;
@@ -281,7 +289,13 @@ switch(fr->lay){
 //    fprintf(stderr,"Sorry, unsupported layer type.\n");
     return 0;
 }
+#if 1
     if(fr->framesize<=0 || fr->framesize>MAXFRAMESIZE) return FALSE;
+#else// XXX: for debugging by mhfan
+    mp_msg(MSGT_DECAUDIO, MSGL_DBG2, "MP3 header info: %#x, version: %d, "
+            "layer: %d\n\tbitrate: %d, samplerate:%d, framesize: %d\n",
+    newhead, fr->mpeg25, fr->lay, MP3_bitrate, MP3_samplerate, fr->framesize);
+#endif
 
     return 1;
 }
