@@ -618,6 +618,7 @@ static char* ar_dev = NULL;
 static char* in_file = NULL;
 static int in_file_fd = -1;
 
+static int mp_input_print_bindings(m_option_t* cfg);
 static int mp_input_print_key_list(m_option_t* cfg);
 static int mp_input_print_cmd_list(m_option_t* cfg);
 
@@ -634,6 +635,7 @@ static const m_option_t input_conf[] = {
   { "file", &in_file, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL },
   { "default-bindings", &default_bindings, CONF_TYPE_FLAG, CONF_GLOBAL, 0, 1, NULL },
   { "nodefault-bindings", &default_bindings, CONF_TYPE_FLAG, CONF_GLOBAL, 1, 0, NULL },
+  { "bindings", mp_input_print_bindings, CONF_TYPE_FUNC, CONF_GLOBAL, 0, 0, NULL },
   { NULL, NULL, 0, 0, 0, 0, NULL}
 };
 
@@ -1888,6 +1890,40 @@ mp_input_uninit(void) {
 void
 mp_input_register_options(m_config_t* cfg) {
   m_config_register_options(cfg,mp_input_opts);
+}
+
+static int mp_input_print_bindings(m_option_t* cfg)
+{
+    int i, j, k;
+
+    if (cmd_binds) {
+	for (i = 0; cmd_binds[i].cmd != NULL ; i++) {
+	    for (j = 0 ; (k = cmd_binds[i].input[j]) != 0; j++) {
+		if (j > 0) printf(" ");
+		if (k < (1 << 7)) printf("%c\t", k); else
+		    printf("%-7s ", mp_input_get_key_name(k));
+	    }	    printf("\t >>=\t %s\n", cmd_binds[i].cmd);
+	}
+    }
+
+    for (i = 0; def_cmd_binds[i].cmd != NULL ; i++) {
+	if (cmd_binds) {
+	    for (j = 0; cmd_binds[j].cmd != NULL ; j++) {
+		int l, m = 0;
+		for (k = 0; (l = def_cmd_binds[i].input[k]) != 0; k++)
+		    if (!(m = cmd_binds[j].input[k]) || m != l) break;
+		if (m == l) { j = -1; break; }
+	    }	if (j < 0) continue;
+	}
+
+	for (j = 0; (k = def_cmd_binds[i].input[j]) != 0; j++) {
+	    if (j > 0) printf(" ");
+	    if (k < (1 << 7)) printf("%c\t", k); else
+		printf("%-7s ", mp_input_get_key_name(k));
+	}	printf("\t >>=\t %s\n", def_cmd_binds[i].cmd);
+    }
+
+    exit(0);
 }
 
 static int mp_input_print_key_list(m_option_t* cfg) {
