@@ -266,6 +266,12 @@ switch(video_codec){
      sh_video->frametime=1.0/picture.fps;
      mp_msg(MSGT_DECVIDEO,MSGL_INFO, "FPS seems to be: %f\n", picture.fps);
    }
+    else {	// XXX: by mhfan
+	sh_video->frametime = 1.0 / (sh_video->fps = 25);
+	mp_msg(MSGT_DECVIDEO, MSGL_V,
+		"Presume framerate: %f fps\n", sh_video->fps);
+    }
+
    break;
  }
  case VIDEO_MPEG12: {
@@ -612,7 +618,8 @@ int video_read_frame(sh_video_t* sh_video,float* frame_time_ptr,unsigned char** 
       break;
       case DEMUXER_TYPE_LAVF:
       case DEMUXER_TYPE_LAVF_PREFERRED:
-        if((int)sh_video->fps==1000 || (int)sh_video->fps<=1){
+        if((int)sh_video->fps==1000 || (int)sh_video->fps<=1
+		|| sh_video->format == 827739206) { // XXX: for 'FLV1' by mhfan
           double next_pts = ds_get_next_pts(d_video);
           double d= (next_pts != MP_NOPTS_VALUE) ? next_pts - d_video->pts : d_video->pts-pts1;
           if(d>=0){

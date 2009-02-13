@@ -590,7 +590,7 @@ int guiGetEvent(int type, void *arg)
             stream_cache_size = -1;
             autosync  = 0;
             dvd_title = 0;
-            force_fps = 0;
+            //force_fps = 0;
         }
 
         guiInfo.sh_video = NULL;
