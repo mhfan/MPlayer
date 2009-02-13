@@ -84,6 +84,7 @@ static int vf_open(vf_instance_t *vf, char *args)
     vf->config = config;
     vf->draw_slice = vf_next_draw_slice;
     vf->uninit = uninit;
+    if (vf->priv) free(vf->priv);	// XXX: mhfan
     //vf->default_caps = 0;
     vf->priv = calloc(sizeof(struct vf_priv_s), 1);
     vf->priv->aspect = 0.;

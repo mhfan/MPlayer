@@ -454,7 +454,12 @@ static int query_format(struct vf_instance *vf, unsigned int fmt){
   return vf_next_query_format(vf,fmt);
 }
 
+static void uninit(vf_instance_t* vf) {
+    free(vf->priv);		vf->priv = NULL;
+}
+
 static int vf_open(vf_instance_t *vf, char *args){
+    vf->uninit = uninit;	// mhfan
     vf->config=config;
     vf->control=control;
     vf->query_format=query_format;

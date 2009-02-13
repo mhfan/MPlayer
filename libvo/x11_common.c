@@ -1011,7 +1011,7 @@ static int vo_x11_get_gnome_layer(Display * mDisplay, Window win)
     {
         mp_msg(MSGT_VO, MSGL_V, "[x11] original window layer is %d.\n",
                *args);
-        return *args;
+	format = *args;	XFree(args);	return format;	// XXX: by mhfan
     }
     return WIN_LAYER_NORMAL;
 }

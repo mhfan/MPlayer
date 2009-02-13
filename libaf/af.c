@@ -559,7 +559,7 @@ af_instance_t* af_add(af_stream_t* s, char* name){
   // Reinitalize the filter list
   if(AF_OK != af_reinit(s, s->first) ||
      AF_OK != fixup_output_format(s)){
-    free(new);
+    af_remove(s, new);	// XXX: mhfan
     return NULL;
   }
   return new;

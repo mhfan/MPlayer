@@ -535,7 +535,7 @@ static void uninit(struct vf_instance *vf){
     if(vf->priv->ctx) sws_freeContext(vf->priv->ctx);
     if(vf->priv->ctx2) sws_freeContext(vf->priv->ctx2);
     free(vf->priv->palette);
-    free(vf->priv);
+    free(vf->priv);	vf->priv = NULL;	// mhfan
 }
 
 static int vf_open(vf_instance_t *vf, char *args){
