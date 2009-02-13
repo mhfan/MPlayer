@@ -433,6 +433,7 @@ Codecs:
   --disable-libopencore_amrwb disable libopencore_amr wideband [autodetect]
   --disable-libopenjpeg     disable OpenJPEG (JPEG2000) input/output support [autodetect]
   --disable-crystalhd       disable CrystalHD support [autodetect]
+  --disable-id3tag          disable libid3tag support [autodetect]
   --disable-decoder=DECODER disable specified FFmpeg decoder
   --enable-decoder=DECODER  enable specified FFmpeg decoder
   --disable-encoder=ENCODER disable specified FFmpeg encoder
@@ -638,6 +639,7 @@ _libavcodec_mpegaudio_hp=yes
 _libopencore_amrnb=auto
 _libopencore_amrwb=auto
 libopenjpeg=auto
+_id3tag=auto
 libavdecoders_all=$(sed -n 's/^[^#]*DEC.*(.*, *\(.*\)).*/\1_decoder/p' ffmpeg/libavcodec/allcodecs.c | tr '[a-z]' '[A-Z]')
 libavdecoders=$(echo $libavdecoders_all | sed -e 's/ LIB[A-Z0-9_]*_DECODER//g')
 libavencoders_all=$(sed -n 's/^[^#]*ENC.*(.*, *\(.*\)).*/\1_encoder/p' ffmpeg/libavcodec/allcodecs.c | tr '[a-z]' '[A-Z]')
@@ -1249,6 +1251,8 @@ for ac_option do
   --disable-libopencore_amrnb)  _libopencore_amrnb=no   ;;
   --enable-libopencore_amrwb)   _libopencore_amrwb=yes  ;;
   --disable-libopencore_amrwb)  _libopencore_amrwb=no   ;;
+  --enable-id3tag)      _id3tag=yes     ;;
+  --disable-id3tag)     _id3tag=no      ;;
 
   --*able-bsf=*|--*able-protocol=*|--*able-muxer=*|--*able-demuxer=*|--*able-parser=*|--*able-decoder=*|--*able-encoder=*)
     ac_opt_val=$(echo $ac_option | cut -d '=' -f 2)
@@ -6988,6 +6992,24 @@ else
   nocodecmodules="libopencore_amrwb $nocodecmodules"
 fi
 echores "$_libopencore_amrwb"
+
+echocheck "id3tag support"
+if test "$_zlib" = no ; then _id3tag=no; fi
+if test "$_id3tag" != no ; then
+  _id3tag=no
+  cat > $TMPC << EOF
+#include <id3tag.h>
+int main(void) { return 0; }
+EOF
+  cc_check -lid3tag $_ld_zlib && _id3tag=yes
+fi
+if test "$_id3tag" = yes ; then
+  _def_id3tag='#define HAVE_ID3TAG_H 1'
+  extra_ldflags="$extra_ldflags -lid3tag -lz"
+else
+  _def_id3tag='#undef HAVE_ID3TAG_H'
+fi
+echores "$_id3tag"
 
 echocheck "libdv-0.9.5+"
 if test "$_libdv" = auto ; then
