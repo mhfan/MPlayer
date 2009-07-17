@@ -6,4 +6,4 @@
 doc_lang_all=`echo DOCS/xml/??/ DOCS/xml/??_??/ | sed -e "s:DOCS/xml/\(..\)/:\1:g" -e "s:DOCS/xml/\(.._..\)/:\1:g"`
 
 echo "DOC_LANG_ALL = ${doc_lang_all}"
-echo "DOC_LANGS = ${doc_lang_all}"
+echo "DOC_LANGS = en zh_CN"

@@ -144,19 +144,19 @@ Description: movie player for Unix-like systems
  Not all of the upstream code is distributed in the source tarball.
  See the README.Debian and copyright files for details.
 
-Package: mplayer-dbg
-Architecture: any
-Section: debug
-Priority: extra
-Depends: mplayer,
-         ${misc:Depends}
-Recommends: ffmpeg-dbg
-Description: debugging symbols for MPlayer
- This package contains the debugging symbols for MPlayer, a movie
- player for Unix-like systems.
- .
- You only need these if you want to generate usefule debugging
- backtraces.
+#Package: mplayer-dbg
+#Architecture: any
+#Section: debug
+#Priority: extra
+#Depends: mplayer,
+#         ${misc:Depends}
+#Recommends: ffmpeg-dbg
+#Description: debugging symbols for MPlayer
+# This package contains the debugging symbols for MPlayer, a movie
+# player for Unix-like systems.
+# .
+# You only need these if you want to generate usefule debugging
+# backtraces.
 
 Package: mplayer-doc
 Architecture: all

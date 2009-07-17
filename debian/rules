@@ -93,17 +93,17 @@ build-arch:
 	dh_testdir
 	dh_prep -a
 	$(MAKE) -f debian/rules debian/mplayer/usr/bin/mplayer
-	$(MAKE) -f debian/rules debian/mencoder/usr/bin/mencoder
-	$(MAKE) -f debian/rules debian/mplayer-gui/usr/bin/gmplayer
+	#$(MAKE) -f debian/rules debian/mencoder/usr/bin/mencoder
+	#$(MAKE) -f debian/rules debian/mplayer-gui/usr/bin/gmplayer
 
 # build non-gui version
 # & mencoder
 debian/mplayer/usr/bin/mplayer debian/mencoder/usr/bin/mencoder:
 	dh_testdir
 	$(CLEAN_ENV) \
-	./configure $(CONFIGURE_FLAGS) --disable-gui
+	./build.sh #./configure $(CONFIGURE_FLAGS) --disable-gui
 	$(CLEAN_ENV) \
-	$(MAKE) $(NUMJOBS) mplayer mencoder V=1
+	$(MAKE) $(NUMJOBS) #mplayer mencoder V=1
 	$(MAKE) install-mplayer DESTDIR=$(CURDIR)/debian/mplayer
 	$(MAKE) install-mplayer-man DESTDIR=$(CURDIR)/debian/mplayer
 	$(MAKE) install-mencoder DESTDIR=$(CURDIR)/debian/mencoder
@@ -132,7 +132,7 @@ install-arch: build-arch
 DOCS/HTML/en/index.html:
 	sh debian/all-lang-config-mak.sh > config.mak
 	cd DOCS/xml && ./configure
-	$(MAKE) -C DOCS/xml html-chunked
+	$(MAKE) -C DOCS/xml html-single #html-chunked
 
 build-indep:
 	dh_testdir
@@ -169,7 +169,7 @@ binary-arch: install-arch
 	dh_installmenu -a
 	dh_installmime -a
 	dh_installman -a
-	dh_strip -a --dbg-package=mplayer-dbg
+	dh_strip -a #--dbg-package=mplayer-dbg
 	dh_link
 	dh_compress -a
 	dh_fixperms -a
