@@ -214,6 +214,19 @@ void mplayer_put_key(int code)
 {
 }
 
+#ifdef CONFIG_MENU
+static int open_vf(vf_instance_t *vf, char* args) { return 0; }
+
+vf_info_t vf_info_menu  = {
+  "NULL libmenu filter for mencoder",
+  "menu",
+  "Albeu",
+  "",
+  open_vf,
+  NULL
+};
+#endif	/* comment by mhfan */
+
 char *current_module;
 
 // Needed by mpcommon.c
