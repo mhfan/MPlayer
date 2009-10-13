@@ -82,6 +82,15 @@ mp_image_t* alloc_mpi(int w, int h, unsigned long int fmt) {
 
 void copy_mpi(mp_image_t *dmpi, mp_image_t *mpi) {
   if(mpi->flags&MP_IMGFLAG_PLANAR){
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    if (mpi->planes[3]) {	// XXX:
+	free(dmpi->planes[0]);
+	dmpi->planes[0] = mpi->planes[0];
+	dmpi->planes[1] = mpi->planes[1];
+	dmpi->planes[2] = mpi->planes[2];
+	dmpi->planes[3] = mpi->planes[3];	return;
+    }
+#endif	/* comment by mhfan */
     memcpy_pic(dmpi->planes[0],mpi->planes[0], mpi->w, mpi->h,
                dmpi->stride[0],mpi->stride[0]);
     memcpy_pic(dmpi->planes[1],mpi->planes[1], mpi->chroma_width, mpi->chroma_height,
@@ -197,6 +206,9 @@ void free_mp_image(mp_image_t* mpi){
     if(!mpi) return;
     if(mpi->flags&MP_IMGFLAG_ALLOCATED){
         /* becouse we allocate the whole image in once */
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+	if (!mpi->planes[3])	// XXX:
+#endif	/* comment by mhfan */
         av_free(mpi->planes[0]);
         if (mpi->flags & MP_IMGFLAG_RGB_PALETTE)
             av_free(mpi->planes[1]);

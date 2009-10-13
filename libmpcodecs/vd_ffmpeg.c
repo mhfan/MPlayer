@@ -299,6 +299,13 @@ static int init(sh_video_t *sh){
 
     if(lavc_codec->capabilities&CODEC_CAP_DR1 && !do_vis_debug && lavc_codec->id != CODEC_ID_H264 && lavc_codec->id != CODEC_ID_INTERPLAY_VIDEO && lavc_codec->id != CODEC_ID_ROQ && lavc_codec->id != CODEC_ID_VP8 && lavc_codec->id != CODEC_ID_LAGARITH)
         ctx->do_dr1=1;
+
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    if (lavc_codec->capabilities & 0x0100) {
+	if (lavc_codec->capabilities & CODEC_CAP_DR1) ctx->do_dr1 = 1;
+    }	else ctx->do_slices = 0;	// XXX:
+#endif	/* comment by mhfan */
+
     ctx->b_age= ctx->ip_age[0]= ctx->ip_age[1]= 256*256*256*64;
     ctx->ip_count= ctx->b_count= 0;
 
@@ -947,6 +954,13 @@ static mp_image_t *decode(sh_video_t *sh, void *data, int len, int flags){
 
     if(dr1 && pic->opaque){
         mpi= (mp_image_t *)pic->opaque;
+
+	if (pic->data[3] && (mpi->planes[0] != pic->data[0])) {	// XXX:
+	    mpi->planes[0] = pic->data[0];
+	    mpi->planes[1] = pic->data[1];
+	    mpi->planes[2] = pic->data[2];
+	    mpi->planes[3] = pic->data[3];
+	}
     }
 
     if(!mpi)

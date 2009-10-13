@@ -62,6 +62,20 @@ Buffer allocation:
 
 #include "libavutil/common.h"
 
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+#define	TCC_M2MSCALER_PADDR 0x4f400000	// XXX:
+#define TCC_M2MSCALER_MSIZE 0x400000
+
+static int tcc_m2mscaler_fd;
+static uint8_t *tcc_m2mscaler_vaddr;
+#endif	/* comment by mhfan */
+
 static const vo_info_t info = {
     "X11/Xv",
     "xv",
@@ -432,6 +446,38 @@ static int draw_slice(uint8_t * image[], int stride[], int w, int h,
 {
     uint8_t *dst;
 
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    if (image[3]) {	// XXX:
+	unsigned* addr = (void*)(xvimage[current_buf]->data +
+				 xvimage[current_buf]->offsets[0]);
+	addr[0] =	    (unsigned) image[3];
+	addr[1] = addr[0] + (unsigned)(image[1] - image[0]);
+	addr[2] = addr[1] + (unsigned)(image[2] - image[1]);
+
+	addr[3] = addr[4] = addr[5] = 0;	return 0;	// XXX:
+    } else {
+	if (tcc_m2mscaler_vaddr != MAP_FAILED) {
+	    unsigned* addr = (void*)(xvimage[current_buf]->data +
+				     xvimage[current_buf]->offsets[0]);
+	    unsigned  size = stride[0] * h;	h >>= 1;    // XXX: -noslices
+
+	    addr[0] = TCC_M2MSCALER_PADDR;
+	    addr[3] = (unsigned)tcc_m2mscaler_vaddr;
+
+	    fast_memcpy((void*)addr[3], image[0], size);
+	    for (int i = 1; i < 3; ++i) {	// XXX:
+		addr[i] = addr[i - 1] + size;
+		addr[3 + i] = addr[3 + i - 1] + size;
+
+		size = stride[i] * h;
+		fast_memcpy((void*)addr[3 + i], image[i], size);
+	    }
+
+	    addr[3] = addr[4] = addr[5] = 0;	return 0;	// XXX:
+	}
+    }
+#endif	/* comment by mhfan */
+
     dst = xvimage[current_buf]->data + xvimage[current_buf]->offsets[0] +
         xvimage[current_buf]->pitches[0] * y + x;
     memcpy_pic(dst, image[0], w, h, xvimage[current_buf]->pitches[0],
@@ -599,6 +645,16 @@ static void uninit(void)
 #endif
     mp_input_rm_event_fd(ConnectionNumber(mDisplay));
     vo_x11_uninit();
+
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    if (-1  < tcc_m2mscaler_fd) {
+	close(tcc_m2mscaler_fd);	tcc_m2mscaler_fd = -1;
+	if (tcc_m2mscaler_vaddr != MAP_FAILED) {
+	    munmap((void*)tcc_m2mscaler_vaddr, TCC_M2MSCALER_MSIZE);
+	    tcc_m2mscaler_vaddr  = MAP_FAILED;
+	}
+    }
+#endif	/* comment by mhfan */
 }
 
 static int preinit(const char *arg)
@@ -727,6 +783,24 @@ static int preinit(const char *arg)
     vo_xv_get_max_img_dim( &max_width, &max_height );
 
     fo = XvListImageFormats(mDisplay, xv_port, (int *) &formats);
+
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    if ((tcc_m2mscaler_fd = open("/dev/mem", O_RDWR | O_NDELAY)) < 0) {
+        mp_msg(MSGT_VO, MSGL_ERR, "Fail to open `/dev/mem': %s\n",
+		strerror(errno));
+	tcc_m2mscaler_vaddr = MAP_FAILED;
+    } else {
+	if ((tcc_m2mscaler_vaddr = mmap(0, TCC_M2MSCALER_MSIZE,
+		PROT_READ | PROT_WRITE, MAP_SHARED,
+		tcc_m2mscaler_fd, TCC_M2MSCALER_PADDR)) == MAP_FAILED) {
+	    mp_msg(MSGT_VO, MSGL_ERR, "Fail to mmap %p + %x: %s\n",
+		    (void*)TCC_M2MSCALER_PADDR, TCC_M2MSCALER_MSIZE,
+		    strerror(errno));
+	    close(tcc_m2mscaler_fd);	tcc_m2mscaler_fd = -1;
+	} else mp_msg(MSGT_VO, MSGL_INFO, "mmaped physical memory: %p + %x\n",
+		(void*)TCC_M2MSCALER_PADDR, TCC_M2MSCALER_MSIZE);
+    }
+#endif	/* comment by mhfan */
 
     mp_input_add_event_fd(ConnectionNumber(mDisplay), check_events);
     return 0;

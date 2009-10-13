@@ -43,7 +43,8 @@ static struct {
 //        { "mpe", DEMUXER_TYPE_MPEG_PS },
         { "vob", DEMUXER_TYPE_MPEG_PS },
         { "m2v", DEMUXER_TYPE_MPEG_PS },
-        { "avi", DEMUXER_TYPE_AVI },
+        { "avi", DEMUXER_TYPE_AVI },	// XXX:
+#ifdef	CONFIG_HACK_FOR_TCCVPU
         { "asx", DEMUXER_TYPE_ASF },
         { "asf", DEMUXER_TYPE_ASF },
         { "wmv", DEMUXER_TYPE_ASF },
@@ -52,6 +53,14 @@ static struct {
         { "vivo", DEMUXER_TYPE_VIVO },
         { "rm", DEMUXER_TYPE_REAL },
         { "rmvb", DEMUXER_TYPE_REAL },
+#else// XXX:
+        { "asx", DEMUXER_TYPE_LAVF },
+        { "asf", DEMUXER_TYPE_LAVF },
+        { "wmv", DEMUXER_TYPE_LAVF },
+        { "wma", DEMUXER_TYPE_LAVF },
+        { "rmvb", DEMUXER_TYPE_LAVF },
+        { "rm", DEMUXER_TYPE_LAVF },
+#endif	/* comment by mhfan */
         { "ra", DEMUXER_TYPE_REAL },
         { "y4m", DEMUXER_TYPE_Y4M },
         { "mp3", DEMUXER_TYPE_AUDIO },

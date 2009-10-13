@@ -207,6 +207,15 @@ static int lavf_check_file(demuxer_t *demuxer){
 }
 
 static const char * const preferred_list[] = {
+#ifdef	CONFIG_HACK_FOR_TCCVPU
+    "rm",
+    "rmvb",
+    "asf",
+    "wma",
+    "wmv",
+    "mpg",
+    "mkv",
+#endif	/* comment by mhfan */
     "dxa",
     "flv",
     "gxf",
@@ -669,6 +678,9 @@ static int demux_lavf_fill_buffer(demuxer_t *demux, demux_stream_t *dsds){
         av_free_packet(&pkt);
     }
 
+    if (pkt.pts == AV_NOPTS_VALUE &&
+	    priv->avfc->streams[id]->codec->codec_type == CODEC_TYPE_VIDEO)
+	pkt.pts = pkt.dts;	// XXX:
     if(pkt.pts != AV_NOPTS_VALUE){
         dp->pts=pkt.pts * av_q2d(priv->avfc->streams[id]->time_base);
         priv->last_pts= dp->pts * AV_TIME_BASE;
