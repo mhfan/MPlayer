@@ -47,8 +47,13 @@ LIBAD_EXTERN(libdca)
 #define DTSBUFFER_SIZE 18726
 #define HEADER_SIZE 14
 
+#ifdef  LIBDCA_FIXED
+#define CONVERT_LEVEL (1 << 26)
+#define CONVERT_BIAS 384
+#else// XXX: mhfan
 #define CONVERT_LEVEL 1
 #define CONVERT_BIAS 0
+#endif
 
 static const char ch2flags[6] = {
     DTS_MONO,
@@ -61,7 +66,11 @@ static const char ch2flags[6] = {
 
 static inline int16_t convert(sample_t s)
 {
+#ifdef LIBDCA_FIXED
+    int i = s; i >>= 15;
+#else
     int i = s * 0x7fff;
+#endif
 
     return (i > 32767) ? 32767 : ((i < -32768) ? -32768 : i);
 }

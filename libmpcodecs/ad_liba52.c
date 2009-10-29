@@ -147,10 +147,190 @@ static int preinit(sh_audio_t *sh)
   if (sh->samplesize < 4) sh->samplesize = 4;
   sh->audio_out_minsize=audio_output_channels*sh->samplesize*256*6;
   sh->audio_in_minsize=3840;
+#ifdef LIBA52_FIXED
+  a52_level = (1 << 26);
+#else
   a52_level = 1.0;
+#endif
   return 1;
 }
 
+#ifdef LIBA52_FIXED
+typedef sample_t convert_t;
+// XXX: from a52dec/libao/convert.c
+
+static inline int16_t convert (int32_t i)
+{
+#ifdef LIBA52_FIXED
+    i >>= 15;
+#else
+    i -= 0x43c00000;
+#endif
+    return (i > 32767) ? 32767 : ((i < -32768) ? -32768 : i);
+}
+
+void convert2s16_1 (convert_t * _f, int16_t * s16)
+{
+    int i;
+    int32_t * f = (int32_t *) _f;
+
+    for (i = 0; i < 256; i++) {
+	s16[i] = convert (f[i]);
+    }
+}
+
+void convert2s16_2 (convert_t * _f, int16_t * s16)
+{
+    int i;
+    int32_t * f = (int32_t *) _f;
+
+    for (i = 0; i < 256; i++) {
+	s16[2*i] = convert (f[i]);
+	s16[2*i+1] = convert (f[i+256]);
+    }
+}
+
+void convert2s16_3 (convert_t * _f, int16_t * s16)
+{
+    int i;
+    int32_t * f = (int32_t *) _f;
+
+    for (i = 0; i < 256; i++) {
+	s16[3*i] = convert (f[i]);
+	s16[3*i+1] = convert (f[i+256]);
+	s16[3*i+2] = convert (f[i+512]);
+    }
+}
+
+void convert2s16_4 (convert_t * _f, int16_t * s16)
+{
+    int i;
+    int32_t * f = (int32_t *) _f;
+
+    for (i = 0; i < 256; i++) {
+	s16[4*i] = convert (f[i]);
+	s16[4*i+1] = convert (f[i+256]);
+	s16[4*i+2] = convert (f[i+512]);
+	s16[4*i+3] = convert (f[i+768]);
+    }
+}
+
+void convert2s16_5 (convert_t * _f, int16_t * s16)
+{
+    int i;
+    int32_t * f = (int32_t *) _f;
+
+    for (i = 0; i < 256; i++) {
+	s16[5*i] = convert (f[i]);
+	s16[5*i+1] = convert (f[i+256]);
+	s16[5*i+2] = convert (f[i+512]);
+	s16[5*i+3] = convert (f[i+768]);
+	s16[5*i+4] = convert (f[i+1024]);
+    }
+}
+
+#if 0
+int channels_multi (int flags)
+{
+    if (flags & A52_LFE)
+	return 6;
+    else if (flags & 1)	/* center channel */
+	return 5;
+    else if ((flags & A52_CHANNEL_MASK) == A52_2F2R)
+	return 4;
+    else
+	return 2;
+}
+#endif
+
+int convert2s16_multi (convert_t * _f, int16_t * s16)
+{
+    int i, n = 6;
+    int32_t * f = (int32_t *) _f;
+
+    switch (a52_flags) {
+    case A52_MONO:
+        if (channel_map == 1) {	n = 1;	// XXX:
+	    for(i = 0; i < 256; i++) s16[i] = convert(f[i]);	break;
+	}
+    case A52_CHANNEL1:
+    case A52_CHANNEL2:	n = 5;
+	for (i = 0; i < 256; i++) {
+	    s16[5*i] = s16[5*i+1] = s16[5*i+2] = s16[5*i+3] = 0;
+	    s16[5*i+4] = convert (f[i]);
+	}
+	break;
+    case A52_CHANNEL:
+    case A52_STEREO:
+    case A52_DOLBY:	n = 2;
+	convert2s16_2 (_f, s16);
+	break;
+    case A52_3F:	n = 5;
+	for (i = 0; i < 256; i++) {
+	    s16[5*i] = convert (f[i]);
+	    s16[5*i+1] = convert (f[i+512]);
+	    s16[5*i+2] = s16[5*i+3] = 0;
+	    s16[5*i+4] = convert (f[i+256]);
+	}
+	break;
+    case A52_2F2R:	n = 4;
+	convert2s16_4 (_f, s16);
+	break;
+    case A52_3F2R:	n = 5;
+	convert2s16_5 (_f, s16);
+	break;
+    case A52_MONO | A52_LFE:
+    case A52_CHANNEL1 | A52_LFE:
+    case A52_CHANNEL2 | A52_LFE:
+	for (i = 0; i < 256; i++) {
+	    s16[6*i] = s16[6*i+1] = s16[6*i+2] = s16[6*i+3] = 0;
+	    s16[6*i+4] = convert (f[i+256]);
+	    s16[6*i+5] = convert (f[i]);
+	}
+	break;
+    case A52_CHANNEL | A52_LFE:
+    case A52_STEREO | A52_LFE:
+    case A52_DOLBY | A52_LFE:
+	for (i = 0; i < 256; i++) {
+	    s16[6*i] = convert (f[i+256]);
+	    s16[6*i+1] = convert (f[i+512]);
+	    s16[6*i+2] = s16[6*i+3] = s16[6*i+4] = 0;
+	    s16[6*i+5] = convert (f[i]);
+	}
+	break;
+    case A52_3F | A52_LFE:
+	for (i = 0; i < 256; i++) {
+	    s16[6*i] = convert (f[i+256]);
+	    s16[6*i+1] = convert (f[i+768]);
+	    s16[6*i+2] = s16[6*i+3] = 0;
+	    s16[6*i+4] = convert (f[i+512]);
+	    s16[6*i+5] = convert (f[i]);
+	}
+	break;
+    case A52_2F2R | A52_LFE:
+	for (i = 0; i < 256; i++) {
+	    s16[6*i] = convert (f[i+256]);
+	    s16[6*i+1] = convert (f[i+512]);
+	    s16[6*i+2] = convert (f[i+768]);
+	    s16[6*i+3] = convert (f[i+1024]);
+	    s16[6*i+4] = 0;
+	    s16[6*i+5] = convert (f[i]);
+	}
+	break;
+    case A52_3F2R | A52_LFE:
+	for (i = 0; i < 256; i++) {
+	    s16[6*i] = convert (f[i+256]);
+	    s16[6*i+1] = convert (f[i+768]);
+	    s16[6*i+2] = convert (f[i+1024]);
+	    s16[6*i+3] = convert (f[i+1280]);
+	    s16[6*i+4] = convert (f[i+512]);
+	    s16[6*i+5] = convert (f[i]);
+	}
+	break;
+    }
+    return n * 256;
+}
+#else
 /**
  * \brief Function to convert the "planar" float format used by liba52
  * into the interleaved float format used by libaf/libao2.
@@ -174,6 +354,7 @@ static int a52_resample_float(float *in, int16_t *out)
     }
     return (int16_t*) p - out;
 }
+#endif
 
 static int init(sh_audio_t *sh_audio)
 {
@@ -198,7 +379,11 @@ static int init(sh_audio_t *sh_audio)
 	mp_msg(MSGT_DECAUDIO,MSGL_ERR,"A52 init failed\n");
 	return 0;
   }
+#ifdef LIBA52_FIXED
+  //sh_audio->sample_format = AF_FORMAT_S32_NE;
+#else
   sh_audio->sample_format = AF_FORMAT_FLOAT_NE;
+#endif
   if(a52_fillbuff(sh_audio)<0){
 	mp_msg(MSGT_DECAUDIO,MSGL_ERR,"A52 sync failed\n");
 	return 0;
@@ -241,6 +426,13 @@ while(sh_audio->channels>0){
   }
   mp_msg(MSGT_DECAUDIO,MSGL_V,"A52 flags after a52_frame: 0x%X\n",flags);
   /* frame decoded, let's init resampler:*/
+#ifdef LIBA52_FIXED
+  {
+    int convert2s16_multi(convert_t * _f, int16_t * s16);
+    a52_resample = convert2s16_multi;
+    channel_map = sh_audio->channels;
+  }
+#else
   channel_map = 0;
   if (sh_audio->sample_format == AF_FORMAT_FLOAT_NE) {
       if (!(flags & A52_LFE)) {
@@ -271,6 +463,7 @@ while(sh_audio->channels>0){
 	  break;
       }
   } else
+#endif
   break;
 }
   if(sh_audio->channels<=0){
@@ -293,14 +486,17 @@ static int control(sh_audio_t *sh,int cmd,void* arg, ...)
       case ADCTRL_SKIP_FRAME:
 	  a52_fillbuff(sh);
 	  return CONTROL_TRUE;
+#ifndef LIBA52_FIXED
       case ADCTRL_SET_VOLUME: {
 	  float vol = *(float*)arg;
 	  if (vol > 60.0) vol = 60.0;
 	  a52_level = vol <= -200.0 ? 0 : pow(10.0,vol/20.0);
 	  return CONTROL_TRUE;
       }
+#endif// XXX:
       case ADCTRL_QUERY_FORMAT:
 	  if (*(int*)arg == AF_FORMAT_S16_NE ||
+	      //*(int*)arg == AF_FORMAT_S32_NE ||
 	      *(int*)arg == AF_FORMAT_FLOAT_NE)
 	      return CONTROL_TRUE;
 	  return CONTROL_FALSE;
@@ -323,6 +519,7 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
 	    return len;
 	}
 
+#ifndef LIBA52_FIXED
 	/* handle dynrng */
 	if (a52_drc_action != DRC_NO_ACTION) {
 	    if (a52_drc_action == DRC_NO_COMPRESSION)
@@ -330,6 +527,7 @@ static int decode_audio(sh_audio_t *sh_audio,unsigned char *buf,int minlen,int m
 	    else
 		a52_dynrng(a52_state, dynrng_call, NULL);
 	}
+#endif
 
 	len=0;
 	for (i = 0; i < 6; i++) {
