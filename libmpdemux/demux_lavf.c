@@ -262,10 +262,16 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
     AVCodecContext *codec= st->codec;
     char *stream_type = NULL;
     int stream_id;
-    AVMetadataTag *lang = av_metadata_get(st->metadata, "language", NULL, 0);
-    AVMetadataTag *title= av_metadata_get(st->metadata, "title",    NULL, 0);
+    AVMetadataTag *mtag;
+    char *lang = NULL, *desc = NULL, *title = NULL;
     int g, override_tag = av_codec_get_tag(mp_codecid_override_taglists,
                                            codec->codec_id);
+    if ((mtag = av_metadata_get(st->metadata,
+	    "title", NULL, 0))) title = mtag->value;
+    if ((mtag = av_metadata_get(st->metadata,
+	    "language", NULL, 0))) lang = mtag->value;
+    if ((mtag = av_metadata_get(st->metadata,
+	    "description", NULL, 0))) desc = mtag->value;	// XXX:
     // For some formats (like PCM) always trust CODEC_ID_* more than codec_tag
     if (override_tag)
         codec->codec_tag = override_tag;
@@ -274,7 +280,11 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
         case AVMEDIA_TYPE_AUDIO:{
             WAVEFORMATEX *wf;
             sh_audio_t* sh_audio;
-            sh_audio = new_sh_audio_aid(demuxer, i, priv->audio_streams, lang ? lang->value : NULL);
+            sh_audio = new_sh_audio_aid(demuxer, i, priv->audio_streams, lang);
+	    if (desc) mp_msg(MSGT_DEMUX, MSGL_INFO,
+		    "[lavf/%s] Audio stream, -aid %d: %s\n",
+		    avfc->iformat->name, i, desc); else
+            mp_msg(MSGT_DEMUX, MSGL_INFO, MSGTR_AudioID, "lavf", i);
             if(!sh_audio)
                 break;
             stream_type = "audio";
@@ -330,8 +340,12 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
                     sh_audio->format = 0x7;
                     break;
             }
-            if (title && title->value)
-                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AID_%d_NAME=%s\n", priv->audio_streams, title->value);
+            if (title)
+                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AID_%d_NAME=%s\n", priv->audio_streams, title);
+            if (lang) {
+		sh_audio->lang = strdup(lang);
+		mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_AID_%d_LANG=%s\n", i, sh_audio->lang);
+            }
             if (st->disposition & AV_DISPOSITION_DEFAULT)
               sh_audio->default_track = 1;
             if(mp_msg_test(MSGT_HEADER,MSGL_V) ) print_wave_header(sh_audio->wf, MSGL_V);
@@ -349,6 +363,10 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
             sh_video_t* sh_video;
             BITMAPINFOHEADER *bih;
             sh_video=new_sh_video_vid(demuxer, i, priv->video_streams);
+	    if (desc) mp_msg(MSGT_DEMUX, MSGL_INFO,
+		    "[lavf/%s] Video stream, -vid %d: %s\n",
+		    avfc->iformat->name, i, desc); else
+            mp_msg(MSGT_DEMUX, MSGL_INFO, MSGTR_VideoID, "lavf", i);
             if(!sh_video) break;
             stream_type = "video";
             priv->vstreams[priv->video_streams] = i;
@@ -390,8 +408,8 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
                 sh_video->aspect=codec->width  * codec->sample_aspect_ratio.num
                        / (float)(codec->height * codec->sample_aspect_ratio.den);
             sh_video->i_bps=codec->bit_rate/8;
-            if (title && title->value)
-                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VID_%d_NAME=%s\n", priv->video_streams, title->value);
+            if (title)
+                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_VID_%d_NAME=%s\n", priv->video_streams, title);
             mp_msg(MSGT_DEMUX,MSGL_DBG2,"aspect= %d*%d/(%d*%d)\n",
                 codec->width, codec->sample_aspect_ratio.num,
                 codec->height, codec->sample_aspect_ratio.den);
@@ -439,7 +457,11 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
                 type = 'p';
             else
                 break;
-            sh_sub = new_sh_sub_sid(demuxer, i, priv->sub_streams, lang ? lang->value : NULL);
+            sh_sub = new_sh_sub_sid(demuxer, i, priv->sub_streams, lang);
+	    if (desc) mp_msg(MSGT_DEMUX, MSGL_INFO,
+		    "[lavf/%s] Subtitle stream, -sid %d: %s\n",
+		    avfc->iformat->name, priv->sub_streams, desc); else
+            mp_msg(MSGT_DEMUX, MSGL_INFO, MSGTR_SubtitleID, "lavf", priv->sub_streams);
             if(!sh_sub) break;
             stream_type = "subtitle";
             priv->sstreams[priv->sub_streams] = i;
@@ -449,8 +471,12 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
                 memcpy(sh_sub->extradata, codec->extradata, codec->extradata_size);
                 sh_sub->extradata_len = codec->extradata_size;
             }
-            if (title && title->value)
-                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_SID_%d_NAME=%s\n", priv->sub_streams, title->value);
+            if (title)
+                mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_SID_%d_NAME=%s\n", priv->sub_streams, title);
+            if (lang) {
+		sh_sub->lang = strdup(lang);
+		mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_SID_%d_LANG=%s\n", priv->sub_streams, sh_sub->lang);
+            }
             if (st->disposition & AV_DISPOSITION_DEFAULT)
               sh_sub->default_track = 1;
             stream_id = priv->sub_streams++;
@@ -474,10 +500,10 @@ static void handle_stream(demuxer_t *demuxer, AVFormatContext *avfc, int i) {
         if (!avc && *stream_type == 's' && demuxer->s_streams[i])
             codec_name = sh_sub_type2str(((sh_sub_t *)demuxer->s_streams[i])->type);
         mp_msg(MSGT_DEMUX, MSGL_INFO, "[lavf] stream %d: %s (%s), -%cid %d", i, stream_type, codec_name, *stream_type, stream_id);
-        if (lang && lang->value && *stream_type != 'v')
-            mp_msg(MSGT_DEMUX, MSGL_INFO, ", -%clang %s", *stream_type, lang->value);
-        if (title && title->value)
-            mp_msg(MSGT_DEMUX, MSGL_INFO, ", %s", title->value);
+        if (lang && *stream_type != 'v')
+            mp_msg(MSGT_DEMUX, MSGL_INFO, ", -%clang %s", *stream_type, lang);
+        if (title)
+            mp_msg(MSGT_DEMUX, MSGL_INFO, ", %s", title);
         mp_msg(MSGT_DEMUX, MSGL_INFO, "\n");
     }
 }
