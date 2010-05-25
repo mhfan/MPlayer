@@ -1572,13 +1572,13 @@ static void update_osd_msg(void)
     // we need some mem for vo_osd_text
     vo_osd_text = (unsigned char *)osd_text;
 
-    if (osdc) {
+    if (osdc < 2) {
 	static time_t lt = 0;
 	time_t t = time(NULL);
 	if (lt < t) {	lt = t;
 	    static char osd_rtc[16] = "";
 	    struct tm* tm = localtime(&t);
-	    snprintf(osd_rtc, 63, "%02d:%02d:%02d",
+	    snprintf(osd_rtc, 16, "%02d:%02d:%02d",
 		    tm->tm_hour, tm->tm_min, tm->tm_sec);
 	    vo_osd_rtc = osd_rtc;	vo_osd_changed(OSDTYPE_RTC);
 	}

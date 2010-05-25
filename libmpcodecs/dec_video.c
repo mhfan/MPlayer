@@ -18,6 +18,7 @@
 
 #include "config.h"
 
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,6 +36,7 @@
 
 #include "codec-cfg.h"
 
+#include "libvo/sub.h"
 #include "libvo/video_out.h"
 
 #include "libmpdemux/stheader.h"
@@ -382,6 +384,7 @@ int init_best_video_codec(sh_video_t *sh_video, char **video_codec_list,
 void *decode_video(sh_video_t *sh_video, unsigned char *start, int in_size,
                    int drop_frame, double pts, int *full_frame)
 {
+    extern int osdc;
     mp_image_t *mpi = NULL;
     unsigned int t = GetTimer();
     unsigned int t2;
@@ -436,6 +439,22 @@ void *decode_video(sh_video_t *sh_video, unsigned char *start, int in_size,
 
     if (!mpi || drop_frame)
         return NULL;            // error / skipped frame
+
+    if (1 < osdc) {	static unsigned cts = 0;
+	if (cts < mpi->clock_timestamp) {
+	    static char osd_cts[32] = "";
+	    struct tm* tm = localtime(&mpi->clock_timestamp);
+
+	    snprintf(osd_cts, 32, "%04d-%02d-%02d %02d:%02d:%02d",
+		    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+		    tm->tm_hour, tm->tm_min, tm->tm_sec);
+	    vo_osd_rtc = osd_cts;	vo_osd_changed(OSDTYPE_RTC);	// XXX:
+	    cts = mpi->clock_timestamp;
+	}   else	// XXX:
+	if (!mpi->clock_timestamp) {
+	    vo_osd_rtc = "";	vo_osd_changed(OSDTYPE_RTC);
+	}
+    }
 
     if (field_dominance == 0)
         mpi->fields |= MP_IMGFIELD_TOP_FIRST;
