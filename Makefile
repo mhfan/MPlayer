@@ -781,6 +781,10 @@ ADD_ALL_EXESUFS = $(1) $(call ADDSUFFIXES,$(EXESUFS_ALL),$(1))
 
 all: $(ALL_PRG-yes)
 
+cscope:
+	find $(DIRS) -maxdepth 1 -name '*.[chS]' -print > cscope.files
+	cscope -bqk
+
 %.o: %.S
 	$(CC) $(CC_DEPFLAGS) $(CFLAGS) -c -o $@ $<
 
