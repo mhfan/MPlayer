@@ -27,6 +27,8 @@
 #include "audio_out.h"
 #include "audio_out_internal.h"
 
+#include "mp_msg.h"
+
 static const ao_info_t info =
 {
 	"Null audio output",
@@ -121,8 +123,27 @@ static int play(void* data,int len,int flags){
     int maxbursts = (ao_data.buffersize - buffer) / ao_data.outburst;
     int playbursts = len / ao_data.outburst;
     int bursts = playbursts > maxbursts ? maxbursts : playbursts;
-    buffer += bursts * ao_data.outburst;
-    return bursts * ao_data.outburst;
+    buffer += (len = bursts * ao_data.outburst);
+
+#ifdef  SHOW_PCMVOL_BAR
+    if (SHOW_PCMVOL_BAR) {	int i;
+	extern short pcmvol_avg, pcmvol_max;
+
+	playbursts = maxbursts = 0;
+	for (i = 0; i < len; i += 2/*af_fmt2bits(format) / 8*/) {
+	    bursts = abs(*(short*)((unsigned)data + i));
+	    if (maxbursts < bursts) maxbursts = bursts;
+	    playbursts += bursts;
+	}
+
+	if (len) {
+	    pcmvol_avg = playbursts * 2 / len;
+	    pcmvol_max = maxbursts;
+	}
+    }
+#endif
+
+    return len;
 }
 
 // return: delay in seconds between first and last sample in buffer

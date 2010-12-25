@@ -1044,6 +1044,65 @@ static int draw_frame(uint8_t *src[])
     return 1;
 }
 
+#ifdef  SHOW_PCMVOL_BAR
+short pcmvol_avg = 0, pcmvol_max = 0;
+
+//extern unsigned long isqrt(unsigned long x);
+
+#if 0
+static unsigned long isqrt(unsigned long x)
+{
+    int bshift = 15;
+    unsigned long g = 0;
+    unsigned long b = 1ul << bshift;
+    /* Adding CLZ could optimize this further */
+
+    do {
+        unsigned long temp = (g + g + b) << bshift;
+
+        if (x > temp) {
+            g += b;
+            x -= temp;
+        }
+
+        b >>= 1;
+    } while (bshift--);
+
+    return g;
+}
+//#else
+static long isqrt(long value)
+{
+    long root = 0;
+
+#define isqrt_step(shift) \
+    if ((0x40000000l >> shift) + root <= value) {	\
+	value -= (0x40000000l >> shift) + root;		\
+	root = (root >> 1) | (0x40000000l >> shift);	\
+    } else root >>= 1;
+
+    isqrt_step( 0);
+    isqrt_step( 2);
+    isqrt_step( 4);
+    isqrt_step( 6);
+    isqrt_step( 8);
+    isqrt_step(10);
+    isqrt_step(12);
+    isqrt_step(14);
+    isqrt_step(16);
+    isqrt_step(18);
+    isqrt_step(20);
+    isqrt_step(22);
+    isqrt_step(24);
+    isqrt_step(26);
+    isqrt_step(28);
+    isqrt_step(30);
+
+    return root + (root < value);
+}
+#endif
+#endif
+
 static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
 {
     uint8_t *d;
@@ -1051,6 +1110,48 @@ static int draw_slice(uint8_t *src[], int stride[], int w, int h, int x, int y)
     d = center + fb_line_len * y + fb_pixel_size * x;
 
     memcpy_pic2(d, src[0], w * fb_pixel_size, h, fb_line_len, stride[0], 1);
+
+#ifdef  SHOW_PCMVOL_BAR
+    if (SHOW_PCMVOL_BAR) {
+	w = 32;	y = 32;	// XXX:
+
+#define MAX_PCMVOL	32768	// (1 << 15)
+
+	//h = isqrt(pcmvol_max * 2) * 128;
+	h = fb_vinfo.yres * (MAX_PCMVOL - pcmvol_max) >> 15;
+
+	x = vo_screenheight  * fb_line_len;
+	d = frame_buffer + y * fb_pixel_size;
+	if (x < center - frame_buffer) d += x;
+
+	for (x = 0; x < h; ++x) {
+	    memset(d, 0x00, w * fb_pixel_size);
+	    d += fb_line_len;
+	}
+
+	for (++h; x < h; ++x) {
+	    memset(d, 0xff, w * fb_pixel_size);
+	    d += fb_line_len;
+	}
+
+	//h = isqrt(pcmvol_avg * 2) * 128;
+	h = fb_vinfo.yres * (MAX_PCMVOL - pcmvol_avg) >> 15;
+
+	for (; x < h; ++x) {
+	    memset(d, 0x00, w * fb_pixel_size);
+	    d += fb_line_len;
+	}
+
+	for (; x < fb_vinfo.yres; ++x) {
+	    y = (x * 0xff / fb_vinfo.yres);
+	    //y = isqrt(y) * 16;	// XXX:
+
+	    y = ((0xff - y) << 16) + (y << 8);
+	    for (h = 0; h < w; ++h) ((unsigned*)d)[h] = y;	// XXX:
+	    d += fb_line_len;
+	}
+    }
+#endif
 
     return 0;
 }
