@@ -1,0 +1,6 @@
+[submodule "libdvdnav"]
+	path = libdvdnav
+	url = git://github.com/sherpya/dvdnav_libdvdnav.git
+[submodule "libdvdread4"]
+	path = libdvdread4
+	url = git://github.com/sherpya/dvdnav_libdvdread.git
