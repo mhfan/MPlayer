@@ -35,6 +35,7 @@
 #ifdef MP_DEBUG
 #include <assert.h>
 #endif
+#include "mpcommon.h"
 #include "mp_fifo.h"
 #include "osdep/getch2.h"
 #include "osdep/keycodes.h"
@@ -1773,7 +1774,7 @@ mp_input_init(void) {
     }
     // Try global conf dir
     file = MPLAYER_CONFDIR "/input.conf";
-    if(! mp_input_parse_config(file))
+    if(disable_system_conf || !mp_input_parse_config(file))
       mp_msg(MSGT_INPUT,MSGL_V,"Falling back on default (hardcoded) input config\n");
   }
   else
