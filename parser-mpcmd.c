@@ -31,6 +31,10 @@
 #include <assert.h>
 #endif
 
+#ifdef _WIN32
+#include "osdep/glob.h"
+#endif
+
 #include "mp_msg.h"
 #include "help_mp.h"
 #include "m_option.h"
@@ -265,6 +269,32 @@ m_config_parse_mp_command_line(m_config_t *config, int argc, char **argv)
                 play_tree_add_file(entry,argv[i]);
              }
         } else {
+#ifdef _WIN32
+        int j, doglob = 0;
+        for (j = 0; j < strlen(argv[i]); j++) {
+            if ((j > 2) && argv[i][j] == ':') { // c: vs http:
+                doglob = 0;
+                break;
+            }
+            if (strchr("*?", argv[i][j])) {
+                doglob = 1;
+                break;
+            }
+        }
+        if (doglob) {
+            glob_t gg;
+            if (!glob(argv[i], 0, NULL, &gg)) {
+                for (j = 0; j < gg.gl_pathc; j++) {
+                    if (j) entry = play_tree_new();
+                    play_tree_add_file(entry, gg.gl_pathv[j]);
+                    add_entry(&last_parent, &last_entry, entry);
+                    last_entry = entry;
+                }
+                globfree(&gg);
+            }
+        }
+        else
+#endif
 	play_tree_add_file(entry,argv[i]);
 	}
 
