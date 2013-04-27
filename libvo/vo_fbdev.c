@@ -104,8 +104,8 @@ static int validate_mode(fb_mode_t *m)
 
 static FILE *fp;
 static int line_num = 0;
-static char *line;
-static char *token[MAX_NR_TOKEN];
+static unsigned char *line;
+static unsigned char *token[MAX_NR_TOKEN];
 
 static int get_token(int num)
 {
